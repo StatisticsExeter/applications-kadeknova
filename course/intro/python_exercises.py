@@ -6,8 +6,8 @@ def parse_date(date_string):
     return datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
 
 
-def sum_list(numbers):
-    return sum(numbers)
+def sum_list(lst):
+    return sum(lst)
 
 
 def max_value(lst):

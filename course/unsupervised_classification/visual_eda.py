@@ -30,5 +30,5 @@ def generate_scaled_boxplot():
 
 def generate_scatterplot():
     df = pd.read_csv("data_cache/unsupervised.csv")
-    fig = px.scatter(df, title="Scatter Matrix of Continuous Variables")
+    fig = _scatter(df, title="Scatter Matrix of Continuous Variables")
     fig.write_html("vignettes/unsupervised/cache/scatterplot.html")

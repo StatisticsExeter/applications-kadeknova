@@ -1,7 +1,15 @@
 from pathlib import Path
 from doit.tools import config_changed
 from course.utils import load_pg_data
-from course.regression.eda import boxplot_age, boxplot_rooms
+from course.regression.eda import (
+    boxplot_age,
+    boxplot_rooms,
+    shortfall_distribution,
+    scatter_rooms_shortfall,
+    shortfall_by_authority,
+    mean_shortfall_age,
+    mean_shortfall_by_authority
+)
 from course.regression.fit_model import fit_model
 from course.regression.caterpillar_reffs import plot_caterpillar
 
@@ -42,11 +50,28 @@ def task_energy_metrics_la():
 
 def task_eda():
     return {
-        'actions': [boxplot_age, boxplot_rooms],
-        'file_dep': ['data_cache/la_energy.csv',
-                     'course/regression/eda.py'],
-        'targets': ['data_cache/vignettes/boxplot_age.html',
-                    'data_cache/vignettes/boxplot_rooms.html'],
+        'actions': [
+            boxplot_age,
+            boxplot_rooms,
+            shortfall_distribution,
+            scatter_rooms_shortfall,
+            shortfall_by_authority,
+            mean_shortfall_age,
+            mean_shortfall_by_authority   # ← BARU
+        ],
+        'file_dep': [
+            'data_cache/la_energy.csv',
+            'course/regression/eda.py'
+        ],
+        'targets': [
+            'data_cache/vignettes/regression/boxplot_age.html',
+            'data_cache/vignettes/regression/boxplot_rooms.html',
+            'data_cache/vignettes/regression/shortfall_distribution.html',
+            'data_cache/vignettes/regression/scatter_rooms_shortfall.html',
+            'data_cache/vignettes/regression/shortfall_by_authority.html',
+            'data_cache/vignettes/regression/mean_shortfall_age.html',
+            'data_cache/vignettes/regression/mean_shortfall_by_authority.html'  # ← BARU
+        ],
     }
 
 
@@ -55,16 +80,26 @@ def task_fit_model():
         'actions': [fit_model],
         'file_dep': ['data_cache/la_energy.csv',
                      'course/regression/fit_model.py'],
-        'targets': ['data_cache/vignettes/model_fit.txt',
-                    'data_cache/models/reffs.csv'],
+        'targets': [
+            'data_cache/vignettes/regression/model_fit.txt',
+            'data_cache/models/reffs.csv',
+            'data_cache/vignettes/regression/residual_histogram.html',
+            'data_cache/vignettes/regression/residual_qqplot.html',
+            'data_cache/vignettes/regression/residuals_vs_fitted.html',
+            'data_cache/vignettes/regression/residuals_vs_rooms.html',
+            'data_cache/vignettes/regression/residuals_vs_age.html',
+        ]
     }
 
 
 def task_caterpillar_plot():
     return {
         'actions': [plot_caterpillar],
-        'file_dep': ['data_cache/models/reffs.csv',
-                     'course/regression/caterpillar_reffs.py'],
-        'targets': ['data_cache/vignettes/regression/model_fit.txt',
-                    'data_cache/vignettes/regression/caterpillar.html'],
+        'file_dep': [
+            'data_cache/models/reffs.csv',
+            'course/regression/caterpillar_reffs.py'
+        ],
+        'targets': [
+            'data_cache/vignettes/regression/caterpillar.html'
+        ],
     }

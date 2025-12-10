@@ -2,8 +2,17 @@ from pathlib import Path
 from doit.tools import config_changed
 from course.utils import load_pg_data
 from course.unsupervised_classification.eda import plot_scatter
-from course.unsupervised_classification.tree import hierarchical_groups, hcluster_analysis
+from course.unsupervised_classification.tree import (hierarchical_groups, hcluster_analysis,
+    gmm_analysis
+)
 from course.unsupervised_classification.kmeans import kmeans
+from course.unsupervised_classification.knumber import (
+    kmeans_elbow,
+    kmeans_silhouette,
+    gmm_bic_aic
+)
+from course.utils import load_pg_data
+import pandas as pd
 
 
 def task_check_cache_data():
@@ -58,25 +67,49 @@ def task_hcluster_analysis():
       'actions': [hcluster_analysis],
       'file_dep': ['data_cache/la_collision.csv',
                    'course/unsupervised_classification/tree.py'],
-      'targets': ['data_cache/vignettes/supervised_classification/dendrogram.html']
+      'targets': ['data_cache/vignettes/unsupervised_classification/dendrogram.html']
     }
 
 
 def task_hierarchical_groups():
     return {
-      'actions': [lambda: hierarchical_groups(20)],
+      'actions': [lambda: hierarchical_groups(22)],
       'file_dep': ['data_cache/la_collision.csv',
                    'course/unsupervised_classification/tree.py'],
-      'targets': ['data_cache/vignettes/supervised_classification/hscatter.html']
+      'targets': ['data_cache/vignettes/unsupervised_classification/hscatter.html']
     }
 
 
 def task_kmeans():
     return {
-      'actions': [lambda: kmeans(4)],
+      'actions': [lambda: kmeans(3)],
       'file_dep': ['data_cache/la_collision.csv',
                    'course/unsupervised_classification/tree.py'],
-      'targets': ['data_cache/vignettes/supervised_classification/kscatter.html',
-                  'data_cache/vignettes/supervised_classification/kcentroids1.html'
-                  'data_cache/vignettes/supervised_classification/kcentroids2.html']
+      'targets': ['data_cache/vignettes/unsupervised_classification/kscatter.html',
+                  'data_cache/vignettes/unsupervised_classification/kcentroids1.html',
+                  'data_cache/vignettes/unsupervised_classification/kcentroids2.html']
+    }
+
+
+def task_gmm():
+    return {
+        'actions': [lambda: gmm_analysis(3)],
+        'file_dep': ['data_cache/la_collision.csv',
+                     'course/unsupervised_classification/tree.py'],
+        'targets': ['data_cache/vignettes/unsupervised_classification/gmm_scatter.html']
+    }
+
+
+def task_knumber():
+    def run():
+        df = pd.read_csv("data_cache/la_collision.csv")
+        df = df.select_dtypes(include="number")
+
+        kmeans_elbow(df)
+        kmeans_silhouette(df)
+        gmm_bic_aic(df)
+
+    return {
+        "actions": [run],
+        "verbosity": 2
     }

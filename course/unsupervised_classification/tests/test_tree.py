@@ -3,7 +3,8 @@ import numpy as np
 import plotly.graph_objects as go
 from scipy.cluster.hierarchy import linkage
 from course.unsupervised_classification.tree import (
-  _plot_dendrogram, _cutree, _pca, _scatter_clusters)
+  _plot_dendrogram, _cutree, _pca, _scatter_clusters, _dbscan_clusters, _gmm_clusters
+)
 
 
 def test_plot_dendrogram_returns_figure():
@@ -39,3 +40,11 @@ def test_scatter_clusters_returns_figure():
     fig = _scatter_clusters(df)
     assert isinstance(fig, go.Figure)
     assert fig.layout.title.text == 'PCA Scatter Plot Colored by Cluster Labels'
+
+
+def test_gmm_returns_clusters():
+    df = pd.DataFrame(np.random.rand(15, 5))
+    clusters = _gmm_clusters(df, n_components=3)
+    assert isinstance(clusters, pd.DataFrame)
+    assert 'cluster' in clusters.columns
+    assert clusters.shape[0] == df.shape[0]

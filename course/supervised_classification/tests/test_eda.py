@@ -1,7 +1,14 @@
 import pandas as pd
 import pytest
-from course.supervised_classification.eda import scatter_onecat, get_grouped_stats, get_frequencies
+from course.supervised_classification.eda import (
+    scatter_onecat,
+    get_grouped_stats,
+    get_frequencies,
+    plot_histograms_combined
+)
 import plotly.graph_objects as go
+from pathlib import Path
+from course.utils import find_project_root
 
 
 def test_scatter_returns_figure():
@@ -45,3 +52,13 @@ def test_grouped_stats(sample_df):
     print(stats.index)
     assert 'Owned' in stats.columns
     assert 'energy_score_count' in stats.index
+    
+    
+def test_plot_histograms_combined_runs():
+    fig = plot_histograms_combined()
+    assert isinstance(fig, go.Figure)
+
+    base_dir = find_project_root()
+    outpath = Path(base_dir, "data_cache/vignettes/supervised_classification/histograms_combined.html")
+
+    assert outpath.exists()

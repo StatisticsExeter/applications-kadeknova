@@ -7,7 +7,7 @@ from course.utils import find_project_root
 
 def _get_roc_results(y_test_path, y_pred_prob_path):
     y_test = pd.read_csv(y_test_path)['built_age']
-    y_pred_prob = pd.read_csv(y_pred_prob_path)['predicted_built_age']
+    y_pred_prob = pd.read_csv(y_pred_prob_path)['predicted_built_age'].apply(lambda x: eval(x)[1]).values
     le = LabelEncoder()
     y_test_encoded = le.fit_transform(y_test)
     fpr, tpr, thresholds = roc_curve(y_test_encoded, y_pred_prob)

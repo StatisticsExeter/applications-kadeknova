@@ -5,6 +5,7 @@ from sklearn.preprocessing import StandardScaler
 from pathlib import Path
 from course.utils import find_project_root
 from course.unsupervised_classification.tree import _scatter_clusters, _pca
+from course.unsupervised_classification.utils_cluster import summarize_clusters
 
 VIGNETTE_DIR = Path('data_cache') / 'vignettes' / 'unsupervised_classification'
 
@@ -35,6 +36,7 @@ def kmeans(k):
     outpath = base_dir / VIGNETTE_DIR / 'kscatter.html'
     fig = _scatter_clusters(df_plot)
     fig.write_html(outpath)
+    summarize_clusters(df, clusters, filename="kmeans_summary.csv")
 
 
 def _plot_centroids(scaled_centers, scaler, colnames, k):    # Melt for grouped bar plot

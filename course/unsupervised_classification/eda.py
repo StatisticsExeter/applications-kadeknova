@@ -20,5 +20,5 @@ def _scatter(df, title):
     Return a plotlty express object which is a scatterplot of all numeric variables
     in the dataframe. The title should be as provided in the function call"""
     fig = px.scatter_matrix(df)        # make scatter matrix
-    fig.update_layout(title=title)  
-    return fig                         
+    fig.update_layout(title=title)
+    return fig

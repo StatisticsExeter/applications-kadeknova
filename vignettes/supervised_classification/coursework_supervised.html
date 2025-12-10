@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="I Kadek Nova Arta Kusuma">
+
+<title>Supervised Classification of Building Age Using EPC Energy Metrics</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="coursework_supervised_files/libs/clipboard/clipboard.min.js"></script>
+<script src="coursework_supervised_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="coursework_supervised_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="coursework_supervised_files/libs/quarto-html/popper.min.js"></script>
+<script src="coursework_supervised_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="coursework_supervised_files/libs/quarto-html/anchor.min.js"></script>
+<link href="coursework_supervised_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="coursework_supervised_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="coursework_supervised_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="coursework_supervised_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="coursework_supervised_files/libs/bootstrap/bootstrap-81267100e462c21b3d6c0d5bf76a3417.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Supervised Classification of Building Age Using EPC Energy Metrics</h1>
+<p class="subtitle lead">Student Number: 740098736</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>I Kadek Nova Arta Kusuma </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Improving the energy efficiency of buildings is an important part of the UK’s plan to reduce carbon emissions. Homes built before 1930 often have very different construction and energy performance compared with modern houses, so they usually require more intensive and expensive retrofit work. Because of this, local authorities need accurate information about building age to make sure retrofit programmes target the right properties.</p>
+<p>Energy Performance Certificate (EPC) data includes many details about a home’s energy use, such as heating, lighting, hot water, overall efficiency, and CO₂ emissions. Even though EPCs do not always state the exact year a property was built, these energy characteristics may still help us predict whether a house belongs to the Pre-30s or Post-30s category. If the predictions are reliable, local authorities could estimate building age using EPC data alone, without needing on-site inspections.</p>
+<p>In this task, the problem is treated as a binary supervised classification. We use several key EPC energy metrics to see how well they can separate the two age groups. The aim is also to test whether simple classification models, such as LDA and QDA, can produce useful predictions to support retrofit planning.</p>
+</section>
+<section id="the-problem" class="level2">
+<h2 class="anchored" data-anchor-id="the-problem">The Problem</h2>
+<p>The age of a building has a strong influence on its energy efficiency and the type of retrofit it needs. Homes built before 1930 tend to be less efficient and often require different treatments compared with modern houses. However, information about building age is not always available and usually requires on-site inspections, which can be costly.</p>
+<p>Energy Performance Certificate (EPC) data provides various energy metrics, such as efficiency, consumption, CO₂ emissions, and heating costs. Since older and newer buildings often show different energy patterns, it is reasonable to ask whether EPC metrics can be used to predict a building’s age.</p>
+<p>This task aims to build a classification model that separates Pre-30s and Post-30s homes using a set of key energy features. If the model performs well, it could help local authorities estimate building age without needing physical surveys.</p>
+<p>The data used in this study comes from Energy Performance Certificates (EPCs) issued within a single local authority area in England. EPCs contain a wide range of information about a building’s energy performance. For this classification task, only seven key variables were selected because they are the most relevant for distinguishing older homes from more modern ones. These variables are:</p>
+<ol type="1">
+<li><p>current_energy_efficiency – the current energy efficiency score</p></li>
+<li><p>environment_impact_current – an indicator of environmental impact based on emissions</p></li>
+<li><p>energy_consumption_current – estimated annual energy use</p></li>
+<li><p>co2_emissions_current – estimated annual carbon emissions</p></li>
+<li><p>lighting_cost_current – lighting costs</p></li>
+<li><p>heating_cost_current – heating costs</p></li>
+<li><p>hot_water_cost_current – hot water costs</p></li>
+</ol>
+<p>The data is labelled into two groups: Pre-30s (built before 1930) and Post-30s. The class sizes are fairly balanced, with 36,523 Pre-30s homes and 30,464 Post-30s homes, so there is no major issue with class imbalance.</p>
+</section>
+<section id="exploratory-data-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="exploratory-data-analysis">Exploratory Data Analysis</h2>
+<div id="e13dfdb3" class="cell" data-results="asis" data-execution_count="2">
+<div class="cell-output cell-output-stdout">
+<pre><code>| built_age   |   count |
+|:------------|--------:|
+| Pre-30s     |   36523 |
+| Post-30s    |   30464 |</code></pre>
+</div>
+</div>
+<p>The class distribution in the dataset shows that there are 36,523 homes in the Pre-30s category and 30,464 homes in the Post-30s category. This split is fairly balanced, with roughly 54.5% older homes and 45.5% modern homes. Such balance is important because it helps ensure that the classification model does not become biased toward one group, allowing it to learn patterns in a more stable and fair way.</p>
+<p>The slightly larger number of Pre-30s homes also suggests that this area has a significant proportion of older buildings. This makes the ability to predict building age from EPC data especially useful, as it can support local authorities in planning retrofit programmes and developing energy-efficiency strategies.</p>
+<div id="97177af6" class="cell" data-results="asis" data-execution_count="3">
+<div class="cell-output cell-output-stdout">
+<pre><code>| Unnamed: 0                       |   Post-30s |   Pre-30s |
+|:---------------------------------|-----------:|----------:|
+| current_energy_efficiency_count  |  30464     | 36523     |
+| current_energy_efficiency_mean   |     63.564 |    51.656 |
+| current_energy_efficiency_std    |     11.028 |    13.456 |
+| current_energy_efficiency_min    |      1     |     1     |
+| current_energy_efficiency_25%    |     58     |    46     |
+| current_energy_efficiency_50%    |     66     |    54     |
+| current_energy_efficiency_75%    |     71     |    60     |
+| current_energy_efficiency_max    |    103     |    96     |
+| environment_impact_current_count |  30464     | 36523     |
+| environment_impact_current_mean  |     60.501 |    47.304 |
+| environment_impact_current_std   |     11.904 |    12.503 |
+| environment_impact_current_min   |      1     |     1     |
+| environment_impact_current_25%   |     53     |    40     |
+| environment_impact_current_50%   |     62     |    48     |
+| environment_impact_current_75%   |     69     |    55     |
+| environment_impact_current_max   |    105     |   109     |
+| energy_consumption_current_count |  30464     | 36523     |
+| energy_consumption_current_mean  |    272.404 |   374.525 |
+| energy_consumption_current_std   |    103.206 |   133.378 |
+| energy_consumption_current_min   |      0     |   -64     |
+| energy_consumption_current_25%   |    205     |   290     |
+| energy_consumption_current_50%   |    254     |   353     |
+| energy_consumption_current_75%   |    319     |   423     |
+| energy_consumption_current_max   |   2333     |  2173     |
+| co2_emissions_current_count      |  30464     | 36523     |
+| co2_emissions_current_mean       |      4.342 |     6.782 |
+| co2_emissions_current_std        |      2.086 |     4.388 |
+| co2_emissions_current_min        |     -0.5   |    -1.1   |
+| co2_emissions_current_25%        |      3     |     4.2   |
+| co2_emissions_current_50%        |      3.8   |     5.8   |
+| co2_emissions_current_75%        |      5.1   |     8.1   |
+| co2_emissions_current_max        |     50     |   211     |
+| lighting_cost_current_count      |  30464     | 36523     |
+| lighting_cost_current_mean       |     90.082 |    91.844 |
+| lighting_cost_current_std        |     40.153 |    43.339 |
+| lighting_cost_current_min        |     15     |    10     |
+| lighting_cost_current_25%        |     64     |    63     |
+| lighting_cost_current_50%        |     82     |    83     |
+| lighting_cost_current_75%        |    107     |   111     |
+| lighting_cost_current_max        |   1973     |   994     |
+| heating_cost_current_count       |  30464     | 36523     |
+| heating_cost_current_mean        |    830.955 |  1303.34  |
+| heating_cost_current_std         |    493.637 |   952.761 |
+| heating_cost_current_min         |     66     |   176     |
+| heating_cost_current_25%         |    529     |   760     |
+| heating_cost_current_50%         |    702     |  1070     |
+| heating_cost_current_75%         |    976     |  1553     |
+| heating_cost_current_max         |  12972     | 46573     |
+| hot_water_cost_current_count     |  30464     | 36523     |
+| hot_water_cost_current_mean      |    142.224 |   143.522 |
+| hot_water_cost_current_std       |     90.175 |   111.191 |
+| hot_water_cost_current_min       |     34     |     0     |
+| hot_water_cost_current_25%       |     94     |    93     |
+| hot_water_cost_current_50%       |    110     |   107     |
+| hot_water_cost_current_75%       |    156     |   134     |
+| hot_water_cost_current_max       |   1879     |  2260     |</code></pre>
+</div>
+</div>
+<p>The descriptive statistics show consistent differences between Pre-30s and Post-30s homes across almost all energy variables. Post-30s homes have better energy efficiency and lower environmental impact, which is reflected in their higher current_energy_efficiency and environment_impact_current scores. In contrast, Pre-30s homes have higher energy consumption and CO₂ emissions at every quartile, indicating poorer overall energy performance.</p>
+<p>The most noticeable difference appears in heating_cost_current. Older homes not only have much higher average heating costs, but they also show extreme variation, with some properties reaching very large maximum values. While a few variables, such as lighting costs, show only small differences, the general pattern is clear: Pre-30s homes tend to use more energy and have higher operating costs.</p>
+<p>These findings suggest that the energy features in EPC data have strong potential for distinguishing building age in a supervised classification setting.</p>
+<p><embed src="../../data_cache/vignettes/supervised_classification/scatterplot.html" style="width:100.0%" height="600"></p>
+<p>The scatterplot matrix, which shows the relationships between all energy variables, reveals noticeable separation between Pre-30s and Post-30s homes, although there is still considerable overlap. In general, the red points (Pre-30s) tend to cluster in areas with lower energy efficiency, higher energy consumption, higher CO₂ emissions, and much higher heating costs. In contrast, the blue points (Post-30s) appear more concentrated in regions with better efficiency and lower energy use. This pattern is consistent across most variable pairs, especially those involving current_energy_efficiency, energy_consumption_current, and heating_cost_current, which clearly show different spreads for older and newer homes.</p>
+<p>However, the plots also show substantial overlap between the two classes, particularly in lighting and hot water costs, where the distributions of both groups look quite similar. Another noticeable feature is the presence of extreme outliers in heating costs—some exceeding 20,000 and even approaching 50,000—almost all of which come from Pre-30s homes. These outliers may influence certain models and help explain why methods such as QDA can sometimes produce less stable results.</p>
+<p>Overall, the scatterplot matrix suggests that although the separation is not perfectly linear, there are clear distributional differences—especially in energy efficiency, energy consumption, and heating costs—that a classification model can use to distinguish building age.</p>
+<p><embed src="../../data_cache/vignettes/supervised_classification/histograms_combined.html" style="width:100.0%" height="600"></p>
+<p>The combined histograms show clear distributional differences between Pre-30s and Post-30s homes. Post-30s houses consistently have higher energy efficiency and lower environmental impact, while Pre-30s homes cluster at lower efficiency levels. The strongest contrasts appear in energy consumption and CO₂ emissions, where older homes shift heavily toward higher values and show long right tails with extreme outliers.</p>
+<p>Some features, such as lighting costs, show only minor differences and large overlap between the two groups. In contrast, heating costs display a very sharp separation: Pre-30s homes have much higher and more variable heating expenses, including extreme outliers, whereas Post-30s homes remain more tightly distributed at lower values. Hot water costs show a similar, though less extreme, pattern.</p>
+<p>Overall, the histograms highlight that variables linked to efficiency, consumption, emissions, and heating costs provide strong signals for distinguishing building age, while a few others contribute little separation.</p>
+</section>
+<section id="fitting-lda-and-qda-classifiers" class="level2">
+<h2 class="anchored" data-anchor-id="fitting-lda-and-qda-classifiers">Fitting LDA and QDA classifiers</h2>
+<section id="fitting-lda" class="level3">
+<h3 class="anchored" data-anchor-id="fitting-lda">Fitting LDA</h3>
+<div id="1863ff5c" class="cell" data-results="asis" data-execution_count="4">
+<div class="cell-output cell-output-stdout">
+<pre><code>| Category     |   precision |   recall |   f1-score |   support |
+|:-------------|------------:|---------:|-----------:|----------:|
+| Post-30s     |       0.727 |    0.69  |      0.708 |  9114     |
+| Pre-30s      |       0.753 |    0.785 |      0.769 | 10983     |
+| accuracy     |       0.742 |    0.742 |      0.742 |     0.742 |
+| macro avg    |       0.74  |    0.738 |      0.739 | 20097     |
+| weighted avg |       0.741 |    0.742 |      0.741 | 20097     |</code></pre>
+</div>
+</div>
+<p>The Linear Discriminant Analysis (LDA) model performs reasonably well in separating Pre-30s and Post-30s homes, achieving an overall accuracy of 0.742. The model is slightly better at identifying Pre-30s properties, as shown by the higher recall for that class (0.785). In contrast, the recall for Post-30s homes is lower (0.69), meaning the model more often misclassifies modern homes as older ones. Even so, the precision values for both classes are fairly balanced, indicating that predictions for each group are usually correct.</p>
+<p>The macro and weighted averages closely match the overall accuracy, suggesting stable performance even with a slight class imbalance. Overall, the results indicate that the energy variables contain a reasonably strong linear signal for distinguishing the two age groups. However, the overlap seen in the EDA and the presence of outliers likely limit the model’s maximum accuracy. Still, LDA provides a solid and interpretable baseline before moving on to more complex classifiers.</p>
+</section>
+<section id="fitting-qda" class="level3">
+<h3 class="anchored" data-anchor-id="fitting-qda">Fitting QDA</h3>
+<div id="b9ece92f" class="cell" data-results="asis" data-execution_count="5">
+<div class="cell-output cell-output-stdout">
+<pre><code>| Category     |   precision |   recall |   f1-score |   support |
+|:-------------|------------:|---------:|-----------:|----------:|
+| Post-30s     |       0.555 |    0.883 |      0.682 |  9114     |
+| Pre-30s      |       0.809 |    0.413 |      0.547 | 10983     |
+| accuracy     |       0.626 |    0.626 |      0.626 |     0.626 |
+| macro avg    |       0.682 |    0.648 |      0.614 | 20097     |
+| weighted avg |       0.694 |    0.626 |      0.608 | 20097     |</code></pre>
+</div>
+</div>
+<p>Quadratic Discriminant Analysis (QDA) performs noticeably worse than LDA, with an overall accuracy of only 0.626. The model also behaves very unevenly across the two classes. For Post-30s homes, recall is extremely high (0.883), meaning QDA almost always recognises modern houses correctly. However, the low precision (0.555) shows that many of these predictions are incorrect, as the model frequently misclassifies older homes as modern.</p>
+<p>For Pre-30s homes, the pattern is reversed: precision is fairly high (0.809), but recall is very low (0.413). This means that when QDA predicts a home as Pre-30s, it is usually right, but the model fails to detect more than half of the older properties. Overall, QDA tends to favour the Post-30s class.</p>
+<p>The imbalance between classes and the drop in accuracy compared with LDA suggest that QDA cannot model the data’s non-linear structure in a stable way. This is likely due to large differences in variance between the classes and the presence of extreme outliers, particularly in heating costs and energy consumption. Because QDA estimates separate covariance matrices for each class, wide or skewed distributions—especially in the Pre-30s group—can make the model unstable. Although QDA is theoretically more flexible than LDA, in this dataset that flexibility results in less consistent performance.</p>
+</section>
+<section id="confusion-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="confusion-matrix">Confusion Matrix</h3>
+<p>Confusion Matrix LDA</p>
+<div id="4f7b8cbc" class="cell" data-results="asis" data-execution_count="6">
+<div class="cell-output cell-output-stdout">
+<pre><code>| Category        |   Pred Pre-30s |   Pred Post-30s |
+|:----------------|---------------:|----------------:|
+| Actual Pre-30s  |           8621 |            2362 |
+| Actual Post-30s |           2821 |            6293 |</code></pre>
+</div>
+</div>
+<p>Confusion Matrix QDA</p>
+<div id="a2606d3a" class="cell" data-results="asis" data-execution_count="7">
+<div class="cell-output cell-output-stdout">
+<pre><code>| Category        |   Pred Pre-30s |   Pred Post-30s |
+|:----------------|---------------:|----------------:|
+| Actual Pre-30s  |           4536 |            6447 |
+| Actual Post-30s |           1068 |            8046 |</code></pre>
+</div>
+</div>
+<p>The confusion matrices clearly show that LDA performs more evenly than QDA. LDA correctly classifies most homes in both groups, with similar numbers of errors for Pre-30s and Post-30s. This balanced behaviour matches its precision and recall scores and suggests that the data has a reasonably strong linear separation.</p>
+<p>QDA, however, shows a strong bias toward Post-30s homes. It correctly identifies most modern houses but misses more than half of the older ones. This imbalance reflects QDA’s sensitivity to unequal variances and the extreme outliers found in Pre-30s heating and energy-use variables. Because QDA estimates separate covariance matrices for each class, these wide distributions make the model unstable.</p>
+<p>LDA’s shared-covariance assumption makes it more robust, and examining its coefficients would likely confirm that energy consumption, CO₂ emissions, and heating costs are the most influential features. Overall, LDA achieves higher accuracy and more balanced predictions, making it the more suitable model for this dataset.</p>
+</section>
+</section>
+<section id="roc-curve-and-auc-for-two-simple-classifiers" class="level2">
+<h2 class="anchored" data-anchor-id="roc-curve-and-auc-for-two-simple-classifiers">ROC curve (and AUC) for two simple classifiers</h2>
+<p><embed src="../../data_cache/vignettes/supervised_classification/roc.html" style="width:100.0%" height="600"></p>
+<p>The ROC curves show that both LDA and QDA perform better than random chance, as their curves lie well above the diagonal. However, the LDA curve consistently sits slightly above the QDA curve across most of the False Positive Rate range. This results in an AUC of 0.81 for LDA compared with 0.79 for QDA, indicating that LDA has slightly stronger and more stable discriminative ability.</p>
+<p>QDA’s lower performance is most visible at the early part of the curve, where small threshold changes cause the False Positive Rate to rise quickly. This matches the confusion matrix results, which show that QDA frequently misclassifies older homes as Post-30s, leading to many false positives. LDA maintains a better balance between true positives and false positives, reflecting the more linear structure of the data. Overall, the ROC curves support the conclusion that LDA is the more reliable model for this dataset.</p>
+</section>
+<section id="disscusion-and-conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="disscusion-and-conclusion">Disscusion and Conclusion</h2>
+<p>The analysis shows that several EPC energy variables—such as energy efficiency, energy consumption, CO₂ emissions, and heating costs—differ noticeably between Pre-30s and Post-30s homes. The EDA results indicate that older homes tend to be less efficient and more energy-intensive, suggesting that these features have potential for predicting building age. The scatterplots and histograms reveal meaningful separation patterns, although with some overlap, implying that linear models may perform reasonably well but not perfectly.</p>
+<p>The classification results support this conclusion. LDA delivers stable performance, achieving an accuracy of 0.742 with balanced recall and precision across both classes. The confusion matrix shows that LDA does not favour one class over the other and can identify both older and newer homes with similar error rates. In contrast, QDA performs far less consistently. Although it achieves a very high recall for Post-30s homes, it fails to detect a large proportion of Pre-30s homes, leading to a strongly imbalanced classification. The ROC curves reinforce this result, with LDA achieving a higher AUC (0.81) than QDA (0.79). QDA’s instability is likely caused by the large variance differences and extreme outliers present in the energy variables—especially heating costs—which disrupt the covariance estimation required by QDA.</p>
+<p>Overall, these findings suggest that the EPC data structure aligns more closely with the assumptions of a linear model like LDA. LDA is more robust to uneven variances and wide distributions, making it better suited to this dataset. Although QDA is theoretically more flexible, in practice it struggles with the high variability found in Pre-30s homes. Thus, LDA provides a more reliable and effective approach for predicting building age using EPC features.</p>
+</section>
+<section id="record-of-ai-use-for-mthm503-supervised-coursework" class="level2">
+<h2 class="anchored" data-anchor-id="record-of-ai-use-for-mthm503-supervised-coursework">Record of AI use for MTHM503 supervised coursework</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 9%">
+<col style="width: 22%">
+<col style="width: 22%">
+<col style="width: 21%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Date</strong></th>
+<th><strong>AI tool used</strong></th>
+<th><strong>Purpose</strong></th>
+<th><strong>Prompt</strong></th>
+<th><strong>Hyperlink to output (where possible)</strong></th>
+<th><strong>Section of work used for</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>E.g. 15/07/2025</td>
+<td>MS Copilot</td>
+<td>To help create an organised essay structure</td>
+<td>‘Generate ideas for structuring an essay on…’</td>
+<td>[insert link]</td>
+<td>introduction</td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

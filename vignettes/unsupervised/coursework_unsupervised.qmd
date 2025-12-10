@@ -1,113 +1,101 @@
 ---
 title: "Clustering local authorities by road collision patterns"
-author: "Anonymous"
+author: "I Kadek Nova Arta Kusuma"
+subtitle: "Student Number: 740098736"
 format: 
   html:
-    embed-resources: true
+    embed-resources: false
 
 ---
 
-## Your task
+## Introduction
 
-This material is provided as context to the problem. You should rewrite it as you see fit.  IN particular, you should demonstrate you understand why we are undertaking a cluster analysis, and what the various methods are telling us.  In particular, you should explain how principal components helps us visualise the results of the clustering.
-
+Road traffic collisions differ widely between local authorities because of factors such as urbanisation, traffic levels, weather, and lighting conditions. To understand these patterns more clearly, an unsupervised learning approach is useful, as it allows us to identify groups of areas with similar collision characteristics without using any prior labels. This study applies three clustering methods—Hierarchical Clustering, K-Means, and Gaussian Mixture Models (GMM)—to reveal the natural structure in the collision data and group local authorities in a meaningful way. With PCA used for visualisation, the clustering results help us see how risks vary across regions and support more targeted road-safety strategies.
 
 ## The Problem
 
-Police recorded data in Great Britain is called "Stats19" and is available at <https://www.data.gov.uk/dataset/cb7ae6f0-4be6-4935-9277-47e5ce24a11f/road-accidents-safety-data>.  These data are typically split into three linked tables:
+Patterns of road traffic collisions vary across local authorities due to differences in urbanisation, weather, lighting, and road conditions. This study uses key variables such as the total number of collisions (n_total), the proportion of collisions in rain (n_raining), in darkness (n_dark), on dry roads (n_dry), the level of urbanisation (n_urban), the proportion of slight injuries (n_slight), and the number of mini roundabouts (n_miniroundabouts) to describe these differences. Because these variables interact in complex ways, the patterns are difficult to identify manually.
 
-- Accidents
-
-  Each row represents a single reported accident. Key fields include:
-
-  - Date and time
-  - Location (e.g. latitude/longitude, local authority)
-  - Road type and conditions
-  - Weather and lighting
-  - Number of vehicles and casualties
-
-- Vehicles
-
-  Each row represents a vehicle involved in an accident. Includes:
-
-  - Vehicle type and age
-  - Manoeuvre and direction
-  - Driver age and sex
-
-- Casualties
-  
-  Each row represents a person injured or killed. Includes:
-
-  - Casualty type (pedestrian, cyclist, driver, etc.)
-  - Severity (slight, serious, fatal)
-  - Age, sex, and mode of transport
-
-These tables are linked via a unique accident index.
+The aim of this study is to determine whether natural clusters exist based on these collision characteristics and to understand the factors that distinguish each cluster. To achieve this, three unsupervised learning methods are applied: Hierarchical Clustering (to explore the structure of the groupings), K-Means (to identify representative centroids), and Gaussian Mixture Models (GMM) (to allow a more flexible, probabilistic approach). PCA is used to visualise the clusters in a lower-dimensional space. Together, these methods provide a clearer understanding of collision patterns across regions and support the development of more targeted road-safety policies.
 
 
-We are interested in creating clusters of like authorities based on the kinds of collisions that occur in their area.  You have been given a count of the number of collisions at Mini-roundabout, in the Rain, in the Dark, when the road is Dry, in an urban setting and where the most seriously injured casualty was reported as having a slight injury.
+## Exploratory Data Analysis
 
-Some previous cluster analysis work has been reported at:
+From the scatter plots between features, several patterns become noticeable. For example, the plot of n_total against n_urban shows that areas with higher urbanisation tend to have more collisions, while less urbanised areas usually have fewer. The plot of n_raining versus n_dry shows an opposite trend, where regions with more rainfall tend to have fewer dry-road conditions. Meanwhile, the plot of n_dry versus n_slight suggests that slight injuries occur more frequently when the road is dry.
 
-- [ Cluster analysis](https://ijirt.org/publishedpaper/IJIRT175966_PAPER.pdf)
-- [More cluster analysis](https://www.researchgate.net/publication/357727987_Identification_of_Traffic_Accident_Patterns_via_Cluster_Analysis_and_Test_Scenario_Development_for_Autonomous_Vehicles/fulltext/61dcdc17034dda1b9eebd63d/Identification-of-Traffic-Accident-Patterns-via-Cluster-Analysis-and-Test-Scenario-Development-for-Autonomous-Vehicles.pdf)
+Other scatter plots also highlight variation between features. For instance, n_miniroundabouts appears to have a different distribution compared with the other variables, and n_dark shows a wide range of values without forming a strong linear pattern with most features. These visual patterns give early clues about which factors may separate groups in the data.
 
-
-## The Data
-
-The first thing we can do is consider a scatterplot of the data
+Based on these observations, some features—especially n_total, n_urban, n_raining, and n_dry—seem particularly informative for clustering because they show clearer differences across data points. These initial insights motivate the use of unsupervised methods such as Hierarchical Clustering, K-Means, or Gaussian Mixture Models to identify meaningful groups of collision patterns in the dataset.
 
 ![](../../data_cache/vignettes/unsupervised_classification/scatterplot.html){width="100%" height="600px"}
 
-We are going to use the proportion of each subtype of collision that was reported, and rescale the variables.
 
+## Determining the Number of Clusters (K)
 
-## Hierarchical clustering
+K-means metrics:
+Elbow Score
+![](../../data_cache/vignettes/unsupervised_classification/kmeans_elbow.html){width="100%" height="600px"}
+Silhouette Score
+![](../../data_cache/vignettes/unsupervised_classification/kmeans_silhouette.html){width="100%" height="600px"}
+BIC/AIC
+![](../../data_cache/vignettes/unsupervised_classification/gmm_bic_aic.html){width="100%" height="600px"}
+Based on the three methods used to determine the number of clusters, the results are fairly consistent in showing that the most stable structure in the data appears at three clusters. In the elbow plot, the largest drop in WSS occurs up to k = 3, after which the curve begins to flatten, indicating that adding more clusters provides little additional benefit. The silhouette score is indeed highest at k = 2, but k = 3 still performs well and captures more variation in collision patterns across local authorities.
 
+The GMM analysis using BIC/AIC also suggests that models with three or four components are the most efficient, with the lowest values typically appearing around k = 3. Overall, all three approaches point to k = 3 as the most balanced choice, offering clear separation between clusters without introducing unnecessary model complexity.
 
+##  Clustering
+
+### Hierarchical Clustering
 The first task is to perform hierarchical clustering.
 
 ![](../../data_cache/vignettes/unsupervised_classification/dendrogram.html){width="100%" height="600px"}
 
+The dendrogram shows that the most stable clustering structure appears when the cut is made at a height of around 20–25, which produces three main clusters—matching the three colour groups in the plot. At this level, the major branches separate clearly, so the resulting clusters can be interpreted as distinct groups.
 
-You need to select a suitable ``cut-point'' and cut the tree at an appropriate height to form a number of clusters.
+If the cut is made lower, for example at a height of 10–15, the number of clusters increases to around five to seven because the larger groups begin to split into smaller sub-clusters. Cutting even further down, around height 5, produces more than ten clusters as even very similar observations are separated into small groups. However, choosing a height that is too low leads to over-segmentation, where meaningful groups are broken into clusters that are too small and no longer interpretable.
 
-To aid visualisation of results, you should plot the cluster membership on a scatterplot of the first two principal components.
-
-
-![](../../data_cache/vignettes/unsupervised_classification/kscatter.html){width="100%" height="600px"}
+For this reason, selecting a height of around 20–25 provides the best balance between having a manageable number of clusters and preserving the meaningful structural patterns in the data.
 
 
-## kmeans clustering
+![](../../data_cache/vignettes/unsupervised_classification/hscatter.html){width="100%" height="600px"}
 
+Hierarchical clustering using Ward’s method produces three main groups when the dendrogram is cut at a height of around 22. This level is chosen because it marks a large jump in the merging distance, indicating that the three resulting clusters represent a stable natural structure in the data. PCA visualisation shows that the three clusters separate reasonably well, reflecting meaningful differences in collision characteristics across the groups.
 
-The second task is to perform k-means clustering. You should select an appropriate number of clusters.
-First, you should look at the cluster centroids:
+Based on the summary statistics, Cluster 1 contains local authorities with the lowest collision levels and relatively light traffic conditions. Cluster 2 represents areas with medium collision patterns and no extreme characteristics, making it a kind of “average” group. Cluster 3, in contrast, consists of authorities with the highest collision levels, marked by high values in urban conditions, rain, and darkness—indicating areas with heavier traffic and greater accident risk.
 
+Overall, the hierarchical clustering results form a clear and interpretable structure, providing a strong foundation for comparison with K-Means and Gaussian Mixture Models in the subsequent analysis.
 
+### K-Means Clustering
+####Centroid
 ![](../../data_cache/vignettes/unsupervised_classification/kcentroids1.html){width="100%" height="600px"}
-
-
 ![](../../data_cache/vignettes/unsupervised_classification/kcentroids2.html){width="100%" height="600px"}
 
+The local authority dataset was analysed using K-Means with four clusters. The cluster sizes vary: Cluster 3 is the largest (n ≈ 1,497), Cluster 2 is the smallest (n ≈ 359), while Clusters 0 and 1 fall in the medium range.
 
-As before you should plot the cluster membership on a scatterplot of the first two principal components.
+The cluster centroids reveal three main collision patterns. Cluster 1 represents the most urban and highest-risk areas, with the highest n_total (around 1200), a high urban proportion (0.81), a large share of dry-road collisions (0.89), and a high proportion of slight injuries (0.81). Cluster 0 sits in the middle range, with n_total around 450, fairly high urbanisation (0.72), and frequent slight-injury collisions (0.74), indicating semi-urban conditions.
 
+Cluster 2 has the lowest n_total (around 300), low urbanisation (0.45), fewer slight-injury collisions (0.64), and relatively higher proportions of collisions in rain and darkness, which suggests more rural characteristics. Overall, the main differences between these clusters are driven by levels of urbanisation and collision volume.
+
+#### K-Means Scatterplot
 ![](../../data_cache/vignettes/unsupervised_classification/kscatter.html){width="100%" height="600px"}
 
+The PCA scatter plot shows that the three K-Means clusters form reasonably distinct groups, with Cluster 1 separated most clearly from the others. This matches the centroid summary, where Cluster 1 has a much higher n_total (around 1200) and higher proportions of urban areas, dry-road collisions, and slight injuries, indicating high-risk urban authorities. Cluster 0 has moderate values across most variables (n_total around 450; urbanisation around 0.72), placing it near the centre of the plot and representing semi-urban areas with medium risk. Cluster 2 shows the lowest n_total (around 300), low urbanisation (around 0.45), and slightly higher proportions of collisions in rain or darkness, forming a separate group that reflects lower-risk rural areas. Overall, the patterns suggest that traffic intensity and urbanisation are the main factors distinguishing the clusters.
 
+### GMM-clustering
+![](../../data_cache/vignettes/unsupervised_classification/gmm_scatter.html){width="100%" height="600px"}
 
+The PCA scatter plot for the GMM results shows three groups that form more gradually compared with K-Means, since GMM assigns clusters based on probabilities rather than strict boundaries. The centroid summary indicates that Cluster 1 has the highest collision intensity, with the largest n_total and high proportions of urban, dry-road, and slight-injury collisions, reflecting dense urban areas. Cluster 0 shows moderate values across all variables and represents semi-urban regions with medium risk. Cluster 2 has the lowest n_total, low urban proportions, and a tendency toward more collisions in rain or darkness, indicating low-traffic rural areas. Overall, GMM identifies cluster patterns that are consistent with the previous methods, with the main difference being the smoother, more gradual separation between groups.
 
+##  Disscussion and Conclusion
 
-##  Additional credit
+The three clustering methods—Hierarchical Clustering (Ward), K-Means, and Gaussian Mixture Models (GMM)—consistently reveal a three-cluster structure in the local authority collision data. Although each approach works differently, the patterns that appear are very similar: one cluster with high collision levels and strongly urban characteristics, one with medium intensity and semi-urban features, and one with low collision levels that reflects more rural areas.
 
-For additional credit you should consider adding a further unsupervised classification method. Alternatively, you could increase the number of variables used in the clustering.
+Hierarchical clustering provides the most intuitive view of how groups form step by step, and cutting the dendrogram at height 22 produces three clusters that make sense both visually and statistically. K-Means supports this result by giving clearly separated centroids, especially for the urban variable, total collisions, and weather-related conditions. GMM, meanwhile, produces smoother and more realistic boundaries because it assigns points based on probability, which is helpful when clusters overlap in PCA space. The fact that all three methods identify the same overall structure suggests that the data contain a strong and stable clustering pattern that is not dependent on any particular algorithm. GMM adds flexibility in capturing gradual transitions, while K-Means remains the easiest to interpret through its centroids.
 
+Across the three methods, the dataset consistently splits into three main groups that reflect clear differences in urbanisation levels, collision intensity, and environmental conditions at the time of the accidents. The first cluster represents high-risk urban areas with large numbers of collisions and a dominance of slight injuries on dry roads. The second cluster captures semi-urban regions with moderate and more balanced collision patterns. The third cluster consists of rural areas where collision numbers are low but more affected by weather and darkness. The agreement across methods shows that the three-cluster structure is reliable and meaningful. This clustering framework can therefore support more targeted road-safety policies, such as traffic-management improvements in dense urban areas and weather-related risk mitigation in rural regions.
 
 
 ## Record of AI use for MTHM503 unsupervised coursework
-
-Instructions: You can use this document to record when, how and why you used GenAI to complete your assessment. It will help you create a record of AI use to submit alongside your references for AI-integrated and AI-assisted assignments. It may also be useful to help you discuss your AI use if you are required to do so in an academic conduct meeting.
 
 | **Date**       | **AI tool used** | **Purpose**                                | **Prompt**                                 | **Hyperlink to output (where possible)** | **Section of work used for** |
 |----------------|------------------|--------------------------------------------|--------------------------------------------|------------------------------------------|-------------------------------|

@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="I Kadek Nova Arta Kusuma">
+
+<title>Evaluating Housing Carbon Emissions Using Mixed-Effects Modelling</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="coursework_regression_files/libs/clipboard/clipboard.min.js"></script>
+<script src="coursework_regression_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="coursework_regression_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="coursework_regression_files/libs/quarto-html/popper.min.js"></script>
+<script src="coursework_regression_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="coursework_regression_files/libs/quarto-html/anchor.min.js"></script>
+<link href="coursework_regression_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="coursework_regression_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="coursework_regression_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="coursework_regression_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="coursework_regression_files/libs/bootstrap/bootstrap-81267100e462c21b3d6c0d5bf76a3417.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Evaluating Housing Carbon Emissions Using Mixed-Effects Modelling</h1>
+<p class="subtitle lead">Student Number: 740098736</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>I Kadek Nova Arta Kusuma </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Energy Performance Certificates (EPCs) provide important information on energy efficiency, carbon emissions, and recommended improvements for properties in the United Kingdom. However, EPC data are not a random sample, and there are substantial differences between local authorities in terms of building age and house size. Older houses tend to produce higher carbon emissions, while larger houses require more energy for heating and lighting. Therefore, comparing performance across local authorities without accounting for these characteristics may lead to misleading conclusions.</p>
+<p>In this report, we analyse carbon emissions after grouping properties within each local authority by two key characteristics: whether the dwelling was built before or after 1930, and the number of heated rooms. For each authority and each age–room category, we observe the average carbon shortfall and the number of dwellings in that category. We then fit a mixed-effects regression model to these grouped averages, weighting by the number of properties in each group. This approach allows us to estimate the systematic effects of age and room count while quantifying residual variation across local authorities. The resulting random effects provide a fair comparison of carbon performance and enable ranking of local authorities after adjusting for structural differences in their housing stock.</p>
+</section>
+<section id="problem-description" class="level2">
+<h2 class="anchored" data-anchor-id="problem-description">Problem Description</h2>
+<p>Data from the UK Energy Performance Certificates (EPC) dataset contain detailed information on property-level energy use, including energy efficiency ratings, estimated carbon emissions, and recommended improvements. EPC data are not a random sample of UK housing, and substantial differences exist between local authorities in terms of building age and property size. Older dwellings generally have poorer insulation and therefore higher carbon emissions, while larger homes require more energy for heating and lighting. Because of these differences, comparing the carbon performance of local authorities without adjusting for the composition of their housing stock would lead to misleading conclusions.</p>
+<p>To address this, we analyse the average carbon emissions for groups of properties defined by two characteristics: whether the dwelling was built before or after 1930, and the number of heated rooms (from 1 to 10). For each local authority and each age–room category, we observe the mean emission value and the number of dwellings in that group.</p>
+<p>We fit a mixed-effects regression model to these grouped averages, weighting by the number of properties in each category. Age and room count are included as fixed effects, while local authorities are modelled using random intercepts. This allows us to estimate systematic structural effects while quantifying residual differences between authorities. The resulting random effects provide an adjusted and fair comparison of carbon performance across local authorities.</p>
+</section>
+<section id="exploratory-data-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="exploratory-data-analysis">Exploratory Data Analysis</h2>
+<section id="distribution-of-shortfall" class="level3">
+<h3 class="anchored" data-anchor-id="distribution-of-shortfall">Distribution of Shortfall</h3>
+<p><embed src="../../data_cache/vignettes/regression/shortfall_distribution.html" style="width:100.0%" height="600"> <embed src="../../data_cache/vignettes/regression/scatter_rooms_shortfall.html" style="width:100.0%" height="600"></p>
+<p>The shortfall distribution is right-skewed, meaning most properties have carbon emissions in the low to medium range, around 4 to 7. Only a small number of houses have much higher values, sometimes above 20. This shows that the variation in shortfall is not even and is affected by certain structural factors. This pattern becomes clearer when looking at the scatterplot that compares shortfall with the number of heated rooms. Houses with more rooms generally have higher shortfall, and the spread of the values becomes wider as the room count increases. This helps explain why the overall distribution has a long right tail. Overall, these visualisations suggest that house size plays an important role in the differences in carbon emissions, and they help explain why the shortfall values are not evenly distributed in the dataset.</p>
+</section>
+<section id="effect-of-rooms-and-age" class="level3">
+<h3 class="anchored" data-anchor-id="effect-of-rooms-and-age">Effect of Rooms and Age</h3>
+<p><embed src="../../data_cache/vignettes/regression/boxplot_age.html" style="width:100.0%" height="600"> <embed src="../../data_cache/vignettes/regression/mean_shortfall_age.html" style="width:100.0%" height="600"> <embed src="../../data_cache/vignettes/regression/boxplot_rooms.html" style="width:100.0%" height="600"></p>
+<p>The comparison of shortfall across building characteristics shows a clear and intuitive pattern. The boxplot for building age (Old vs Recent) shows that older houses have a much higher median shortfall, along with a wider spread and more extreme outliers. This suggests that older homes are generally less energy efficient than newer ones. The bar chart of mean shortfall also supports this, with older houses averaging around 8.2, while newer houses average about 5.2. This difference highlights the strong impact of building age on carbon emissions. The boxplot for the number of rooms shows another steady pattern, where shortfall increases gradually and almost linearly as house size grows. Both the median and the interquartile range rise consistently from 1 up to 10 rooms. Overall, these patterns show that building age and house size are key factors that drive carbon emissions, and both should be included as explanatory variables in the regression model to allow a fair comparison between local authorities.</p>
+</section>
+<section id="variation-across-local-authorities" class="level3">
+<h3 class="anchored" data-anchor-id="variation-across-local-authorities">Variation Across Local Authorities</h3>
+<p><embed src="../../data_cache/vignettes/regression/shortfall_by_authority.html" style="width:100.0%" height="600"> <embed src="../../data_cache/vignettes/regression/mean_shortfall_by_authority.html" style="width:100.0%" height="600"></p>
+<p>The visualisation of shortfall across local authorities shows that there is quite a lot of variation between areas, even though each authority contains many houses with different characteristics. The shortfall_by_authority plot shows a wide spread of values in almost every area. Some authorities even have outliers above 25, while most houses fall somewhere between 4 and 10. When we look at the average values in the mean_shortfall_by_authority plot, the differences become even clearer. Some authorities have an average shortfall close to 5, while others are well above 7 or even around 10. This suggests that the variation between local authorities is not only caused by house characteristics like age or number of rooms, but also by wider structural factors within each area, such as the types of buildings that are common, local energy policies, or differences in heating infrastructure. Because these differences between authorities are quite large, it makes sense to include a random intercept in the mixed-effects model. This helps us capture variation that cannot be explained by house-level variables alone and allows for a fairer comparison between local authorities.</p>
+</section>
+</section>
+<section id="model-fitting" class="level2">
+<h2 class="anchored" data-anchor-id="model-fitting">Model Fitting</h2>
+<div id="d3d0a2a5" class="cell" data-results="asis" data-execution_count="1">
+<div class="cell-output cell-output-stdout">
+<pre><code>          Mixed Linear Model Regression Results
+=========================================================
+Model:            MixedLM Dependent Variable: shortfall  
+No. Observations: 6917    Method:             REML       
+No. Groups:       346     Scale:              3.5884     
+Min. group size:  17      Log-Likelihood:     -14453.0511
+Max. group size:  20      Converged:          Yes        
+Mean group size:  20.0                                   
+---------------------------------------------------------
+              Coef.  Std.Err.    z    P&gt;|z| [0.025 0.975]
+---------------------------------------------------------
+Intercept      2.409    0.065  37.206 0.000  2.282  2.536
+age[T.Recent] -2.981    0.046 -65.447 0.000 -3.071 -2.892
+n_rooms        1.054    0.008 132.940 0.000  1.039  1.070
+Group Var      0.434    0.025                            
+=========================================================
+</code></pre>
+</div>
+</div>
+<p>The mixed-effects regression results show that both house characteristics and differences between local authorities play an important role in explaining variation in shortfall. The intercept of 2.409 represents the average shortfall for an older house with one heated room, after accounting for the random effect of each area. The coefficient for age (age[T.Recent] = –2.981) shows that newer houses have a shortfall that is almost 3 units lower than older houses, which is a very large and highly significant difference (p &lt; 0.001). This matches the EDA findings that modern properties tend to be much more energy efficient. The coefficient for the number of rooms (n_rooms = 1.054) suggests that each additional heated room increases the shortfall by about one unit. This supports the positive, almost linear relationship between house size and carbon emissions that we saw in the earlier scatterplot. The variance of the random effect (Group Var = 0.434) shows that there is meaningful variation between local authorities that cannot be explained by age or room count alone. This confirms that using a random intercept is appropriate. Overall, the model suggests that building age, house size, and area-specific factors all contribute to differences in residential carbon emissions.</p>
+</section>
+<section id="model-diagnostics" class="level2">
+<h2 class="anchored" data-anchor-id="model-diagnostics">Model Diagnostics</h2>
+<section id="residual-histogram" class="level3">
+<h3 class="anchored" data-anchor-id="residual-histogram">Residual Histogram</h3>
+<p><embed src="../../data_cache/vignettes/regression/residual_histogram.html" style="width:100.0%" height="600"> The histogram of the residuals shows a distribution that is roughly normal, but still noticeably right-skewed. The long right tail and a few large positive residuals (some above 12) suggest that while most errors are centred around zero, there are some cases where the shortfall is much higher than what the model predicts. Mild departures from normality like this are common in social or energy data, but the stronger right-skew may indicate that the model is missing some factors that help explain the very high shortfall values.</p>
+</section>
+<section id="qq-plot" class="level3">
+<h3 class="anchored" data-anchor-id="qq-plot">QQ Plot</h3>
+<p><embed src="../../data_cache/vignettes/regression/residual_qqplot.html" style="width:100.0%" height="600"> The QQ-plot supports what we saw in the histogram. The residuals follow the straight line fairly well in the middle, which means the normality assumption holds reasonably well for most observations. However, at the ends of the distribution, especially in the upper tail, the points rise well above the theoretical line. This shows that the residuals have a heavy upper tail, meaning the model tends to underestimate shortfall for some properties with very high values.</p>
+<p>This suggests that the residuals are not perfectly normal, but the model is still reliable for interpreting the fixed effects because the sample size is large (around 6,900). Even so, predictions for extreme cases should be treated with some caution.</p>
+</section>
+<section id="residuals-vs-fitted" class="level3">
+<h3 class="anchored" data-anchor-id="residuals-vs-fitted">Residuals vs Fitted</h3>
+<p><embed src="../../data_cache/vignettes/regression/residuals_vs_fitted.html" style="width:100.0%" height="600"></p>
+<p>The residuals versus fitted values plot shows a clear U-shaped pattern, which suggests that the linearity assumption of the model is not fully met. The residuals tend to be positive when the fitted values are very low or very high, and they become negative in the middle range. This kind of pattern suggests that the relationship between shortfall, number of rooms and building age is not completely linear, and the current model is not capturing all of that structure.</p>
+<p>The spread of the residuals also becomes wider as the fitted values increase, which indicates heteroskedasticity. In other words, the size of the errors grows as the predicted shortfall gets larger. Overall, this plot suggests that the model may need something more flexible, for example by adding a non-linear term or using a transformation, so the systematic pattern in the residuals can be reduced.</p>
+</section>
+<section id="residuals-by-age-and-number-of-rooms" class="level3">
+<h3 class="anchored" data-anchor-id="residuals-by-age-and-number-of-rooms">Residuals by Age and Number of Rooms</h3>
+<p><embed src="../../data_cache/vignettes/regression/residuals_vs_rooms.html" style="width:100.0%" height="600"> The plot of residuals against n_rooms shows that the residuals are mostly scattered around zero for most room categories. Even so, there are two noticeable patterns. For houses with a high number of rooms, especially 9 or 10, the residuals have much larger variation and include some large positive outliers. In contrast, the residuals for smaller houses, around 1 to 3 rooms, are much tighter and have far less variation.</p>
+<p>This suggests heteroscedasticity, meaning the model errors increase as the number of rooms grows. It also shows that the linear relationship between n_rooms and shortfall is not completely stable, even though the overall effect remains strong, as seen from the highly significant coefficient. If a better fitting model is needed, a variable transformation or a random slope for n_rooms could be considered.</p>
+<p><embed src="../../data_cache/vignettes/regression/residuals_vs_age.html" style="width:100.0%" height="600"> The boxplot of residuals by building age shows a clear difference between the two groups. The residuals for older houses have much larger variation and include more extreme outliers. In contrast, the residuals for newer houses are much tighter and almost symmetric, with very few outliers.</p>
+<p>This suggests that the model explains shortfall better for newer properties but is less accurate for older ones. In other words, the age variable is important, but its effect is not completely uniform, and there is still unexplained variation within the older housing group. This hints that the model could be improved by adding extra predictors such as heating type, insulation quality or general property condition. Even though the model does not perfectly satisfy all assumptions, it still captures the main structural patterns and provides meaningful adjusted comparisons across authorities.</p>
+</section>
+</section>
+<section id="caterpillar-plot" class="level2">
+<h2 class="anchored" data-anchor-id="caterpillar-plot">Caterpillar Plot</h2>
+<p><embed src="../../data_cache/vignettes/regression/caterpillar.html" style="width:100.0%" height="600"> The caterpillar plot of the random intercepts shows that there is quite a lot of variation between local authorities in terms of shortfall, even after adjusting for building age and number of rooms. The blue points represent the estimated random effects for each authority, sorted from lowest to highest, and the grey bands show the 95 percent confidence intervals.</p>
+<p>Authorities on the left have clearly negative random effects, meaning that properties in those areas tend to have lower shortfall than the national average after accounting for house characteristics. These can be seen as the better performers in terms of energy efficiency. On the other hand, the authorities on the right have large positive random effects, which means their properties produce higher emissions than expected based on age and room count alone. These can be considered the weaker performers.</p>
+<p>Most of the intervals are fairly narrow, which suggests that the estimates are reasonably precise. The overall spread of the random effects also confirms the area level differences we saw in the earlier EDA. This supports the use of a random intercept in the mixed effects model and provides a useful way to identify which areas might need stronger energy policy interventions.</p>
+</section>
+<section id="discussion-and-conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="discussion-and-conclusion">Discussion and Conclusion</h2>
+<p>This analysis aims to evaluate differences in property-level carbon emissions across local authorities using Energy Performance Certificate (EPC) data. Because the housing sector is highly diverse, especially in terms of building age and the number of rooms, a simple comparison between local authorities can be misleading. To address this, a mixed-effects linear model is used to separate the systematic variation explained by building characteristics (fixed effects) from the remaining differences between local authorities (random effects. This provides a fairer basis for comparing the carbon performance of different areas.</p>
+<p>The initial data exploration highlights two clear patterns. First, houses with more rooms have much higher shortfall values (annual CO₂ emissions), and this relationship becomes very steep for larger homes. Second, older houses consistently show higher shortfall than newer ones. There are also noticeable differences in shortfall distributions across local authorities, suggesting that geographic factors or local policies may influence energy efficiency. These patterns support the use of a mixed-effects model.</p>
+<p>The mixed-effects model confirms these findings. Each additional room significantly increases shortfall, while newer houses have much lower shortfall compared with older ones. Both variables are highly statistically significant. However, the residual diagnostics indicate that the model is not fully adequate. The residual-versus-fitted plot shows a strong U-shaped pattern, suggesting that the relationship is not fully linear. The QQ-plot and histogram show non-normality, a long right tail and several outliers. Heteroskedasticity also appears, especially for larger houses, where the spread of the residuals becomes much wider. This shows that although the model captures the main trends, a simple linear form does not fully describe the complexity of the relationship between building characteristics and emissions.</p>
+<p>Even so, the random effects from the model provide useful information about how local authorities perform relative to each other. The caterpillar plot shows a wide range of random intercepts. Some authorities have negative intercepts, meaning their properties perform better than the national average after adjusting for age and size, while others have positive intercepts, meaning their properties perform worse. These differences cannot be explained by age or room count alone and may reflect variations in local energy policy, building quality or adoption of efficiency measures. This makes the caterpillar plot a useful tool for identifying high-performing authorities as well as those that may need more support.</p>
+<p>Overall, the analysis shows that building characteristics strongly influence carbon emissions, and any evaluation of local authority performance must take them into account. The mixed-effects model offers a fairer framework for comparison, although the residual diagnostics suggest that the model could be improved by adding non-linear terms, using transformations, or including additional predictors such as property type, insulation levels or heating fuel. These findings not only help explain the structural factors behind emissions but also provide a foundation for energy policy analysis at both local and national levels.</p>
+</section>
+<section id="record-of-ai-use-for-mthm503-regression-coursework" class="level2">
+<h2 class="anchored" data-anchor-id="record-of-ai-use-for-mthm503-regression-coursework">Record of AI use for MTHM503 Regression coursework</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 9%">
+<col style="width: 22%">
+<col style="width: 22%">
+<col style="width: 21%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Date</strong></th>
+<th><strong>AI tool used</strong></th>
+<th><strong>Purpose</strong></th>
+<th><strong>Prompt</strong></th>
+<th><strong>Hyperlink to output (where possible)</strong></th>
+<th><strong>Section of work used for</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>E.g. 15/07/2025</td>
+<td>MS Copilot</td>
+<td>To help create an organised essay structure</td>
+<td>‘Generate ideas for structuring an essay on…’</td>
+<td>[insert link]</td>
+<td>introduction</td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -3,7 +3,7 @@ title: "Olive Oil composition"
 author: "Please complete"
 format: 
   html:
-    embed-resources: true
+    embed-resources: false
 
 ---
 

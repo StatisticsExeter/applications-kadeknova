@@ -1,50 +1,53 @@
 ---
-title: "Building a classifier to predicting house age"
-author: "Anonymous"
+title: "Supervised Classification of Building Age Using EPC Energy Metrics"
+author: "I Kadek Nova Arta Kusuma"
+subtitle: "Student Number: 740098736"
 format: 
   html:
-    embed-resources: true
+    embed-resources: false
 
 ---
 
-## Your task
+## Introduction
 
-This material is provided as context to the problem. You should rewrite it as you see fit.
+Improving the energy efficiency of buildings is an important part of the UK’s plan to reduce carbon emissions. Homes built before 1930 often have very different construction and energy performance compared with modern houses, so they usually require more intensive and expensive retrofit work. Because of this, local authorities need accurate information about building age to make sure retrofit programmes target the right properties.
+
+Energy Performance Certificate (EPC) data includes many details about a home’s energy use, such as heating, lighting, hot water, overall efficiency, and CO₂ emissions. Even though EPCs do not always state the exact year a property was built, these energy characteristics may still help us predict whether a house belongs to the Pre-30s or Post-30s category. If the predictions are reliable, local authorities could estimate building age using EPC data alone, without needing on-site inspections.
+
+In this task, the problem is treated as a binary supervised classification. We use several key EPC energy metrics to see how well they can separate the two age groups. The aim is also to test whether simple classification models, such as LDA and QDA, can produce useful predictions to support retrofit planning.
 
 ## The Problem
 
-Data on [Energy Certificates](https://epc.opendatacommunities.org/) were downloaded in March 2025. These certificates are a non-random sample of UK housing, and contain information such as:
+The age of a building has a strong influence on its energy efficiency and the type of retrofit it needs. Homes built before 1930 tend to be less efficient and often require different treatments compared with modern houses. However, information about building age is not always available and usually requires on-site inspections, which can be costly.
 
-- Property energy efficiency: The core data is the energy efficiency rating, which ranges from A (most efficient) to G (least efficient).
-- CO2 emissions: The data includes information on the building's likely carbon dioxide emissions.
-- Energy costs: Potential costs for heating and lighting the property are provided.
-- Improvement recommendations: Each EPC lists cost-effective ways to improve the building's energy performance.
+Energy Performance Certificate (EPC) data provides various energy metrics, such as efficiency, consumption, CO₂ emissions, and heating costs. Since older and newer buildings often show different energy patterns, it is reasonable to ask whether EPC metrics can be used to predict a building’s age.
 
-In all, there are 93 variables available on a wide range of metrics. The full dataset is in the course database server at `10.121.4.250` in `energy.energy_certificates`
+This task aims to build a classification model that separates Pre-30s and Post-30s homes using a set of key energy features. If the model performs well, it could help local authorities estimate building age without needing physical surveys.
 
-The data have been used for various published supervised classification exercises:
+The data used in this study comes from Energy Performance Certificates (EPCs) issued within a single local authority area in England. EPCs contain a wide range of information about a building’s energy performance. For this classification task, only seven key variables were selected because they are the most relevant for distinguishing older homes from more modern ones. These variables are:
 
-- ONS data science campus EPC data to predict energy efficiency ratings across Welsh properties. They applied models like XGBoost and found that features such as floor area, number of habitable rooms, and extension count were most predictive <https://datasciencecampus.ons.gov.uk/projects/using-machine-learning-to-predict-energy-efficiency/>
-- EPC anomaly detection (improve data quality) <https://www.iaarc.org/publications/fulltext/102_A_Comprehensive_Approach_for_Automated_Anomaly_Detection_and_Enhancement_of_EPC_Datasets_for_Decarbonization.pdf>
-- Identifying priorities for retrofit strategy <https://uwlpress.uwl.ac.uk/newvistas/article/id/299/>
-- EPC prediction <https://github.com/yourunclefrankie/Energy-efficiency-prediction>
+1. current_energy_efficiency – the current energy efficiency score
 
-In reducing the carbon footprint of UK housing, it is important to develop a strategy that offers the right solutions to the right properties. It is widely believed that houses build before 1930 require very different approaches to houses built after that period.  In this task, you are required to determine whether it is possible to determine the age of a house based on several recorded energy metrics. These are `current_energy_efficiency`, `environment_impact_current`, `energy_consumption_current`, `co2_emissions_current`, `lighting_cost_current`, `heating_cost_current`, `hot_water_cost_current`.  You have data for all certificates issued in a single local authority area.  This would help the local authority identify the right targets just using metrics rather than requiring a visit to the property to determine its age.
+2. environment_impact_current – an indicator of environmental impact based on emissions
 
+3. energy_consumption_current – estimated annual energy use
 
+4. co2_emissions_current – estimated annual carbon emissions
 
+5. lighting_cost_current – lighting costs
 
-## The Data
+6. heating_cost_current – heating costs
 
-A very simple preview of the data is given below:
+7. hot_water_cost_current – hot water costs
+
+The data is labelled into two groups: Pre-30s (built before 1930) and Post-30s. The class sizes are fairly balanced, with 36,523 Pre-30s homes and 30,464 Post-30s homes, so there is no major issue with class imbalance.
+
+## Exploratory Data Analysis
 
 ```{python}
 #| echo: false
 import pandas as pd
 ```
-
-And a clumsy presentation of some group summary statistics:
-
 
 ```{python}
 #| echo: false
@@ -52,7 +55,9 @@ And a clumsy presentation of some group summary statistics:
 df = pd.read_csv('../../data_cache/vignettes/supervised_classification/frequencies.csv')
 print(df.round(3).to_markdown(index=False))
 ```
+The class distribution in the dataset shows that there are 36,523 homes in the Pre-30s category and 30,464 homes in the Post-30s category. This split is fairly balanced, with roughly 54.5% older homes and 45.5% modern homes. Such balance is important because it helps ensure that the classification model does not become biased toward one group, allowing it to learn patterns in a more stable and fair way.
 
+The slightly larger number of Pre-30s homes also suggests that this area has a significant proportion of older buildings. This makes the ability to predict building age from EPC data especially useful, as it can support local authorities in planning retrofit programmes and developing energy-efficiency strategies.
 
 
 ```{python}
@@ -62,61 +67,98 @@ df = pd.read_csv('../../data_cache/vignettes/supervised_classification/grouped_s
 print(df.round(3).to_markdown(index=False))
 ```
 
-It is always useful to view a scatterplot of the data, marking the two known groups
+The descriptive statistics show consistent differences between Pre-30s and Post-30s homes across almost all energy variables. Post-30s homes have better energy efficiency and lower environmental impact, which is reflected in their higher current_energy_efficiency and environment_impact_current scores. In contrast, Pre-30s homes have higher energy consumption and CO₂ emissions at every quartile, indicating poorer overall energy performance.
+
+The most noticeable difference appears in heating_cost_current. Older homes not only have much higher average heating costs, but they also show extreme variation, with some properties reaching very large maximum values. While a few variables, such as lighting costs, show only small differences, the general pattern is clear: Pre-30s homes tend to use more energy and have higher operating costs.
+
+These findings suggest that the energy features in EPC data have strong potential for distinguishing building age in a supervised classification setting.
 
 
 ![](../../data_cache/vignettes/supervised_classification/scatterplot.html){width="100%" height="600px"}
 
+The scatterplot matrix, which shows the relationships between all energy variables, reveals noticeable separation between Pre-30s and Post-30s homes, although there is still considerable overlap. In general, the red points (Pre-30s) tend to cluster in areas with lower energy efficiency, higher energy consumption, higher CO₂ emissions, and much higher heating costs. In contrast, the blue points (Post-30s) appear more concentrated in regions with better efficiency and lower energy use. This pattern is consistent across most variable pairs, especially those involving current_energy_efficiency, energy_consumption_current, and heating_cost_current, which clearly show different spreads for older and newer homes.
+
+However, the plots also show substantial overlap between the two classes, particularly in lighting and hot water costs, where the distributions of both groups look quite similar. Another noticeable feature is the presence of extreme outliers in heating costs—some exceeding 20,000 and even approaching 50,000—almost all of which come from Pre-30s homes. These outliers may influence certain models and help explain why methods such as QDA can sometimes produce less stable results.
+
+Overall, the scatterplot matrix suggests that although the separation is not perfectly linear, there are clear distributional differences—especially in energy efficiency, energy consumption, and heating costs—that a classification model can use to distinguish building age.
 
 
-For more marks, you may wish to extend this EDA section slightly.  We can extract the performance metrics from fitting such models:
+![](../../data_cache/vignettes/supervised_classification/histograms_combined.html){width="100%" height="600px"}
+
+The combined histograms show clear distributional differences between Pre-30s and Post-30s homes. Post-30s houses consistently have higher energy efficiency and lower environmental impact, while Pre-30s homes cluster at lower efficiency levels. The strongest contrasts appear in energy consumption and CO₂ emissions, where older homes shift heavily toward higher values and show long right tails with extreme outliers.
+
+Some features, such as lighting costs, show only minor differences and large overlap between the two groups. In contrast, heating costs display a very sharp separation: Pre-30s homes have much higher and more variable heating expenses, including extreme outliers, whereas Post-30s homes remain more tightly distributed at lower values. Hot water costs show a similar, though less extreme, pattern.
+
+Overall, the histograms highlight that variables linked to efficiency, consumption, emissions, and heating costs provide strong signals for distinguishing building age, while a few others contribute little separation.
 
 
 ## Fitting LDA and QDA classifiers
+### Fitting LDA
+```{python}
+#| echo: false
+#| results: 'asis'
+df = pd.read_csv('lda.csv')
+df.rename(columns={"Unnamed: 0": "Category"}, inplace=True)
+print(df.round(3).to_markdown(index=False))
+```
+The Linear Discriminant Analysis (LDA) model performs reasonably well in separating Pre-30s and Post-30s homes, achieving an overall accuracy of 0.742. The model is slightly better at identifying Pre-30s properties, as shown by the higher recall for that class (0.785). In contrast, the recall for Post-30s homes is lower (0.69), meaning the model more often misclassifies modern homes as older ones. Even so, the precision values for both classes are fairly balanced, indicating that predictions for each group are usually correct.
 
-The simplest classifiers we could apply are Linear and Quadratic Discriminant analysis.
+The macro and weighted averages closely match the overall accuracy, suggesting stable performance even with a slight class imbalance. Overall, the results indicate that the energy variables contain a reasonably strong linear signal for distinguishing the two age groups. However, the overlap seen in the EDA and the presence of outliers likely limit the model’s maximum accuracy. Still, LDA provides a solid and interpretable baseline before moving on to more complex classifiers.
 
+### Fitting QDA
 
 ```{python}
 #| echo: false
 #| results: 'asis'
-df = pd.read_csv('../../data_cache/vignettes/supervised_classification/lda.csv')
+df = pd.read_csv('qda.csv')
 df.rename(columns={"Unnamed: 0": "Category"}, inplace=True)
 print(df.round(3).to_markdown(index=False))
 ```
+Quadratic Discriminant Analysis (QDA) performs noticeably worse than LDA, with an overall accuracy of only 0.626. The model also behaves very unevenly across the two classes. For Post-30s homes, recall is extremely high (0.883), meaning QDA almost always recognises modern houses correctly. However, the low precision (0.555) shows that many of these predictions are incorrect, as the model frequently misclassifies older homes as modern.
 
-### Results from fitting a quadratic discriminant analysis
+For Pre-30s homes, the pattern is reversed: precision is fairly high (0.809), but recall is very low (0.413). This means that when QDA predicts a home as Pre-30s, it is usually right, but the model fails to detect more than half of the older properties. Overall, QDA tends to favour the Post-30s class.
 
+The imbalance between classes and the drop in accuracy compared with LDA suggest that QDA cannot model the data’s non-linear structure in a stable way. This is likely due to large differences in variance between the classes and the presence of extreme outliers, particularly in heating costs and energy consumption. Because QDA estimates separate covariance matrices for each class, wide or skewed distributions—especially in the Pre-30s group—can make the model unstable. Although QDA is theoretically more flexible than LDA, in this dataset that flexibility results in less consistent performance.
+
+### Confusion Matrix
+Confusion Matrix LDA
 ```{python}
 #| echo: false
 #| results: 'asis'
-df = pd.read_csv('../../data_cache/vignettes/supervised_classification/qda.csv')
+df = pd.read_csv('confusion_matrix_lda.csv')
 df.rename(columns={"Unnamed: 0": "Category"}, inplace=True)
 print(df.round(3).to_markdown(index=False))
 ```
+Confusion Matrix QDA
+```{python}
+#| echo: false
+#| results: 'asis'
+df = pd.read_csv('confusion_matrix_qda.csv')
+df.rename(columns={"Unnamed: 0": "Category"}, inplace=True)
+print(df.round(3).to_markdown(index=False))
+```
+The confusion matrices clearly show that LDA performs more evenly than QDA. LDA correctly classifies most homes in both groups, with similar numbers of errors for Pre-30s and Post-30s. This balanced behaviour matches its precision and recall scores and suggests that the data has a reasonably strong linear separation.
 
-You should comment on these results. You may wish to add an interpretation of the coefficients of these classifiers.  Or there may be other metrics (confusion matrix) that you think should be presented.
+QDA, however, shows a strong bias toward Post-30s homes. It correctly identifies most modern houses but misses more than half of the older ones. This imbalance reflects QDA’s sensitivity to unequal variances and the extreme outliers found in Pre-30s heating and energy-use variables. Because QDA estimates separate covariance matrices for each class, these wide distributions make the model unstable.
+
+LDA’s shared-covariance assumption makes it more robust, and examining its coefficients would likely confirm that energy consumption, CO₂ emissions, and heating costs are the most influential features. Overall, LDA achieves higher accuracy and more balanced predictions, making it the more suitable model for this dataset.
 
 
 ## ROC curve (and AUC) for two simple classifiers
-
-We can of course examine the AUC for these classifiers.
-
-
 ![](../../data_cache/vignettes/supervised_classification/roc.html){width="100%" height="600px"}
 
+The ROC curves show that both LDA and QDA perform better than random chance, as their curves lie well above the diagonal. However, the LDA curve consistently sits slightly above the QDA curve across most of the False Positive Rate range. This results in an AUC of 0.81 for LDA compared with 0.79 for QDA, indicating that LDA has slightly stronger and more stable discriminative ability.
 
-You should comment on the performance of the classifier.
+QDA’s lower performance is most visible at the early part of the curve, where small threshold changes cause the False Positive Rate to rise quickly. This matches the confusion matrix results, which show that QDA frequently misclassifies older homes as Post-30s, leading to many false positives. LDA maintains a better balance between true positives and false positives, reflecting the more linear structure of the data. Overall, the ROC curves support the conclusion that LDA is the more reliable model for this dataset.
 
-##  Additional credit
+##  Disscusion and Conclusion
+The analysis shows that several EPC energy variables—such as energy efficiency, energy consumption, CO₂ emissions, and heating costs—differ noticeably between Pre-30s and Post-30s homes. The EDA results indicate that older homes tend to be less efficient and more energy-intensive, suggesting that these features have potential for predicting building age. The scatterplots and histograms reveal meaningful separation patterns, although with some overlap, implying that linear models may perform reasonably well but not perfectly.
 
-For additional credit you should consider extended the pipeline and trying out other classifiers.
+The classification results support this conclusion. LDA delivers stable performance, achieving an accuracy of 0.742 with balanced recall and precision across both classes. The confusion matrix shows that LDA does not favour one class over the other and can identify both older and newer homes with similar error rates. In contrast, QDA performs far less consistently. Although it achieves a very high recall for Post-30s homes, it fails to detect a large proportion of Pre-30s homes, leading to a strongly imbalanced classification. The ROC curves reinforce this result, with LDA achieving a higher AUC (0.81) than QDA (0.79). QDA’s instability is likely caused by the large variance differences and extreme outliers present in the energy variables—especially heating costs—which disrupt the covariance estimation required by QDA.
 
+Overall, these findings suggest that the EPC data structure aligns more closely with the assumptions of a linear model like LDA. LDA is more robust to uneven variances and wide distributions, making it better suited to this dataset. Although QDA is theoretically more flexible, in practice it struggles with the high variability found in Pre-30s homes. Thus, LDA provides a more reliable and effective approach for predicting building age using EPC features.
 
 ## Record of AI use for MTHM503 supervised coursework
-
-Instructions: You can use this document to record when, how and why you used GenAI to complete your assessment. It will help you create a record of AI use to submit alongside your references for AI-integrated and AI-assisted assignments. It may also be useful to help you discuss your AI use if you are required to do so in an academic conduct meeting.
-
 | **Date**       | **AI tool used** | **Purpose**                                | **Prompt**                                 | **Hyperlink to output (where possible)** | **Section of work used for** |
 |----------------|------------------|--------------------------------------------|--------------------------------------------|------------------------------------------|-------------------------------|
 | E.g. 15/07/2025| MS Copilot       | To help create an organised essay structure| ‘Generate ideas for structuring an essay on...’ | [insert link]                          | introduction                  |

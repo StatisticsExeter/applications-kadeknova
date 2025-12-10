@@ -1,58 +1,53 @@
 ---
-title: "Understanding costs"
-author: "Anonymous"
+title: "Evaluating Housing Carbon Emissions Using Mixed-Effects Modelling"
+author: "I Kadek Nova Arta Kusuma"
+subtitle: "Student Number: 740098736"
 format: 
   html:
-    embed-resources: true
+    embed-resources: false
     math: mathjax
 
 ---
 
 
 
-## Your task
+## Introduction
 
-This material is provided as context to the problem. You should rewrite it as you see fit.
+Energy Performance Certificates (EPCs) provide important information on energy efficiency, carbon emissions, and recommended improvements for properties in the United Kingdom. However, EPC data are not a random sample, and there are substantial differences between local authorities in terms of building age and house size. Older houses tend to produce higher carbon emissions, while larger houses require more energy for heating and lighting. Therefore, comparing performance across local authorities without accounting for these characteristics may lead to misleading conclusions.
 
-## The Problem
+In this report, we analyse carbon emissions after grouping properties within each local authority by two key characteristics: whether the dwelling was built before or after 1930, and the number of heated rooms. For each authority and each age–room category, we observe the average carbon shortfall and the number of dwellings in that category. We then fit a mixed-effects regression model to these grouped averages, weighting by the number of properties in each group. This approach allows us to estimate the systematic effects of age and room count while quantifying residual variation across local authorities. The resulting random effects provide a fair comparison of carbon performance and enable ranking of local authorities after adjusting for structural differences in their housing stock.
 
-Data on [Energy Certificates](https://epc.opendatacommunities.org/) were downloaded in March 2025. These certificates are a non-random sample of UK housing, and contain information such as:
+## Problem Description
 
-- Property energy efficiency: The core data is the energy efficiency rating, which ranges from A (most efficient) to G (least efficient).
-- CO2 emissions: The data includes information on the building's likely carbon dioxide emissions.
-- Energy costs: Potential costs for heating and lighting the property are provided.
-- Improvement recommendations: Each EPC lists cost-effective ways to improve the building's energy performance.
+Data from the UK Energy Performance Certificates (EPC) dataset contain detailed information on property-level energy use, including energy efficiency ratings, estimated carbon emissions, and recommended improvements. EPC data are not a random sample of UK housing, and substantial differences exist between local authorities in terms of building age and property size. Older dwellings generally have poorer insulation and therefore higher carbon emissions, while larger homes require more energy for heating and lighting. Because of these differences, comparing the carbon performance of local authorities without adjusting for the composition of their housing stock would lead to misleading conclusions.
 
-We have been asked by a local company to determine whether some local authorities are better than others in terms of reducing the carbon footprint of properties in their area.  However, some authorities have older housing stock which is innately has a larger carbon footprint. Likewise, some have larger properties than others.  The initial brief is to carry out an aggregate data analysis where the unit of analysis is a local authority.  We have been asked to consider the average carbon footprint of a house in a given area conditional on being pre- or post-1930 and having between 1 and 10 heated rooms.  This should let you fit a model which has fixed effects for the number of houses of pre-1930, post-1930 and 1, 2, 3, ..., 10 heated rooms
+To address this, we analyse the average carbon emissions for groups of properties defined by two characteristics: whether the dwelling was built before or after 1930, and the number of heated rooms (from 1 to 10). For each local authority and each age–room category, we observe the mean emission value and the number of dwellings in that group.
 
-
-$$Y_{ji} = \beta_0 + \beta_1 x_{j}^{(\text{old})} + \sum_{r=1}^{10} \beta_r x_{j}^{(r)} + \gamma_j$$
-
-Where 
-
-- $Y_{ji}$ is the average carbon dioxide emissions for authority $j$ for each house type $i$ (old/new, 1, 2, ..., 10 rooms)
-- $x_{j}^{(old)}$ is the number of houses that are older than 1930 in authority $j$
-- $x_{j}^r$ are the number of houses with $r=1, 2, ..., 10$ rooms in authority $j$ 
-- $\beta_0$, $\beta_1$, $\beta_r$ are the fixed effects
-- $\gamma_j$ is the random effect for local authority $j$
+We fit a mixed-effects regression model to these grouped averages, weighting by the number of properties in each category. Age and room count are included as fixed effects, while local authorities are modelled using random intercepts. This allows us to estimate systematic structural effects while quantifying residual differences between authorities. The resulting random effects provide an adjusted and fair comparison of carbon performance across local authorities.
 
 
+## Exploratory Data Analysis
+### Distribution of Shortfall
 
+![](../../data_cache/vignettes/regression/shortfall_distribution.html){width="100%" height="600px"}
+![](../../data_cache/vignettes/regression/scatter_rooms_shortfall.html){width="100%" height="600px"}
 
-## The Data
+The shortfall distribution is right-skewed, meaning most properties have carbon emissions in the low to medium range, around 4 to 7. Only a small number of houses have much higher values, sometimes above 20. This shows that the variation in shortfall is not even and is affected by certain structural factors. This pattern becomes clearer when looking at the scatterplot that compares shortfall with the number of heated rooms. Houses with more rooms generally have higher shortfall, and the spread of the values becomes wider as the room count increases. This helps explain why the overall distribution has a long right tail. Overall, these visualisations suggest that house size plays an important role in the differences in carbon emissions, and they help explain why the shortfall values are not evenly distributed in the dataset.
 
-Some initial exploratory data analysis shows us how the carbon emissions vary by age of property and by the number of rooms:
-
-
-
+### Effect of Rooms and Age
 ![](../../data_cache/vignettes/regression/boxplot_age.html){width="100%" height="600px"}
-
+![](../../data_cache/vignettes/regression/mean_shortfall_age.html){width="100%" height="600px"}
 ![](../../data_cache/vignettes/regression/boxplot_rooms.html){width="100%" height="600px"}
 
+The comparison of shortfall across building characteristics shows a clear and intuitive pattern. The boxplot for building age (Old vs Recent) shows that older houses have a much higher median shortfall, along with a wider spread and more extreme outliers. This suggests that older homes are generally less energy efficient than newer ones. The bar chart of mean shortfall also supports this, with older houses averaging around 8.2, while newer houses average about 5.2. This difference highlights the strong impact of building age on carbon emissions. The boxplot for the number of rooms shows another steady pattern, where shortfall increases gradually and almost linearly as house size grows. Both the median and the interquartile range rise consistently from 1 up to 10 rooms. Overall, these patterns show that building age and house size are key factors that drive carbon emissions, and both should be included as explanatory variables in the regression model to allow a fair comparison between local authorities.
 
-## The model
+### Variation Across Local Authorities
+![](../../data_cache/vignettes/regression/shortfall_by_authority.html){width="100%" height="600px"}
+![](../../data_cache/vignettes/regression/mean_shortfall_by_authority.html){width="100%" height="600px"}
 
-A model can be fitted and a summary of the fixed effects produced
+The visualisation of shortfall across local authorities shows that there is quite a lot of variation between areas, even though each authority contains many houses with different characteristics. The shortfall_by_authority plot shows a wide spread of values in almost every area. Some authorities even have outliers above 25, while most houses fall somewhere between 4 and 10. When we look at the average values in the mean_shortfall_by_authority plot, the differences become even clearer. Some authorities have an average shortfall close to 5, while others are well above 7 or even around 10. This suggests that the variation between local authorities is not only caused by house characteristics like age or number of rooms, but also by wider structural factors within each area, such as the types of buildings that are common, local energy policies, or differences in heating infrastructure. Because these differences between authorities are quite large, it makes sense to include a random intercept in the mixed-effects model. This helps us capture variation that cannot be explained by house-level variables alone and allows for a fairer comparison between local authorities.
+
+## Model Fitting
 
 
 ```{python}
@@ -63,24 +58,59 @@ with open('../../data_cache/vignettes/regression/model_fit.txt') as f:
     content = f.read()
     print(content)
 ```
+The mixed-effects regression results show that both house characteristics and differences between local authorities play an important role in explaining variation in shortfall. The intercept of 2.409 represents the average shortfall for an older house with one heated room, after accounting for the random effect of each area. The coefficient for age (age[T.Recent] = –2.981) shows that newer houses have a shortfall that is almost 3 units lower than older houses, which is a very large and highly significant difference (p < 0.001). This matches the EDA findings that modern properties tend to be much more energy efficient. The coefficient for the number of rooms (n_rooms = 1.054) suggests that each additional heated room increases the shortfall by about one unit. This supports the positive, almost linear relationship between house size and carbon emissions that we saw in the earlier scatterplot. The variance of the random effect (Group Var = 0.434) shows that there is meaningful variation between local authorities that cannot be explained by age or room count alone. This confirms that using a random intercept is appropriate. Overall, the model suggests that building age, house size, and area-specific factors all contribute to differences in residential carbon emissions.
 
+## Model Diagnostics
+### Residual Histogram
+![](../../data_cache/vignettes/regression/residual_histogram.html){width="100%" height="600px"}
+The histogram of the residuals shows a distribution that is roughly normal, but still noticeably right-skewed. The long right tail and a few large positive residuals (some above 12) suggest that while most errors are centred around zero, there are some cases where the shortfall is much higher than what the model predicts. Mild departures from normality like this are common in social or energy data, but the stronger right-skew may indicate that the model is missing some factors that help explain the very high shortfall values.
 
-## The key insight
+### QQ Plot
+![](../../data_cache/vignettes/regression/residual_qqplot.html){width="100%" height="600px"}
+The QQ-plot supports what we saw in the histogram. The residuals follow the straight line fairly well in the middle, which means the normality assumption holds reasonably well for most observations. However, at the ends of the distribution, especially in the upper tail, the points rise well above the theoretical line. This shows that the residuals have a heavy upper tail, meaning the model tends to underestimate shortfall for some properties with very high values.
 
-We've been asked to rate local authority performance, so the most important result is a ``caterpillar plot'' of the random effects.
+This suggests that the residuals are not perfectly normal, but the model is still reliable for interpreting the fixed effects because the sample size is large (around 6,900). Even so, predictions for extreme cases should be treated with some caution.
 
+### Residuals vs Fitted
+![](../../data_cache/vignettes/regression/residuals_vs_fitted.html){width="100%" height="600px"}
+
+The residuals versus fitted values plot shows a clear U-shaped pattern, which suggests that the linearity assumption of the model is not fully met. The residuals tend to be positive when the fitted values are very low or very high, and they become negative in the middle range. This kind of pattern suggests that the relationship between shortfall, number of rooms and building age is not completely linear, and the current model is not capturing all of that structure.
+
+The spread of the residuals also becomes wider as the fitted values increase, which indicates heteroskedasticity. In other words, the size of the errors grows as the predicted shortfall gets larger. Overall, this plot suggests that the model may need something more flexible, for example by adding a non-linear term or using a transformation, so the systematic pattern in the residuals can be reduced.
+
+### Residuals by Age and Number of Rooms
+![](../../data_cache/vignettes/regression/residuals_vs_rooms.html){width="100%" height="600px"}
+The plot of residuals against n_rooms shows that the residuals are mostly scattered around zero for most room categories. Even so, there are two noticeable patterns. For houses with a high number of rooms, especially 9 or 10, the residuals have much larger variation and include some large positive outliers. In contrast, the residuals for smaller houses, around 1 to 3 rooms, are much tighter and have far less variation.
+
+This suggests heteroscedasticity, meaning the model errors increase as the number of rooms grows. It also shows that the linear relationship between n_rooms and shortfall is not completely stable, even though the overall effect remains strong, as seen from the highly significant coefficient. If a better fitting model is needed, a variable transformation or a random slope for n_rooms could be considered.
+
+![](../../data_cache/vignettes/regression/residuals_vs_age.html){width="100%" height="600px"}
+The boxplot of residuals by building age shows a clear difference between the two groups. The residuals for older houses have much larger variation and include more extreme outliers. In contrast, the residuals for newer houses are much tighter and almost symmetric, with very few outliers.
+
+This suggests that the model explains shortfall better for newer properties but is less accurate for older ones. In other words, the age variable is important, but its effect is not completely uniform, and there is still unexplained variation within the older housing group. This hints that the model could be improved by adding extra predictors such as heating type, insulation quality or general property condition. Even though the model does not perfectly satisfy all assumptions, it still captures the main structural patterns and provides meaningful adjusted comparisons across authorities.
+
+## Caterpillar Plot
 
 ![](../../data_cache/vignettes/regression/caterpillar.html){width="100%" height="600px"}
+The caterpillar plot of the random intercepts shows that there is quite a lot of variation between local authorities in terms of shortfall, even after adjusting for building age and number of rooms. The blue points represent the estimated random effects for each authority, sorted from lowest to highest, and the grey bands show the 95 percent confidence intervals.
 
-##  Additional credit
+Authorities on the left have clearly negative random effects, meaning that properties in those areas tend to have lower shortfall than the national average after accounting for house characteristics. These can be seen as the better performers in terms of energy efficiency. On the other hand, the authorities on the right have large positive random effects, which means their properties produce higher emissions than expected based on age and room count alone. These can be considered the weaker performers.
 
-For additional credit you might like to enhance the exploratory data analysis. You could consider residual diagnostics to check the validity of the model fit. You may also like to consider the appropriateness of the adjusting variables age and number of rooms. You could consider extracting further variables from the database and fitting a slightly more elaborate model.
+Most of the intervals are fairly narrow, which suggests that the estimates are reasonably precise. The overall spread of the random effects also confirms the area level differences we saw in the earlier EDA. This supports the use of a random intercept in the mixed effects model and provides a useful way to identify which areas might need stronger energy policy interventions.
+
+## Discussion and Conclusion
+This analysis aims to evaluate differences in property-level carbon emissions across local authorities using Energy Performance Certificate (EPC) data. Because the housing sector is highly diverse, especially in terms of building age and the number of rooms, a simple comparison between local authorities can be misleading. To address this, a mixed-effects linear model is used to separate the systematic variation explained by building characteristics (fixed effects) from the remaining differences between local authorities (random effects. This provides a fairer basis for comparing the carbon performance of different areas.
+
+The initial data exploration highlights two clear patterns. First, houses with more rooms have much higher shortfall values (annual CO₂ emissions), and this relationship becomes very steep for larger homes. Second, older houses consistently show higher shortfall than newer ones. There are also noticeable differences in shortfall distributions across local authorities, suggesting that geographic factors or local policies may influence energy efficiency. These patterns support the use of a mixed-effects model.
+
+The mixed-effects model confirms these findings. Each additional room significantly increases shortfall, while newer houses have much lower shortfall compared with older ones. Both variables are highly statistically significant. However, the residual diagnostics indicate that the model is not fully adequate. The residual-versus-fitted plot shows a strong U-shaped pattern, suggesting that the relationship is not fully linear. The QQ-plot and histogram show non-normality, a long right tail and several outliers. Heteroskedasticity also appears, especially for larger houses, where the spread of the residuals becomes much wider. This shows that although the model captures the main trends, a simple linear form does not fully describe the complexity of the relationship between building characteristics and emissions.
+
+Even so, the random effects from the model provide useful information about how local authorities perform relative to each other. The caterpillar plot shows a wide range of random intercepts. Some authorities have negative intercepts, meaning their properties perform better than the national average after adjusting for age and size, while others have positive intercepts, meaning their properties perform worse. These differences cannot be explained by age or room count alone and may reflect variations in local energy policy, building quality or adoption of efficiency measures. This makes the caterpillar plot a useful tool for identifying high-performing authorities as well as those that may need more support.
+
+Overall, the analysis shows that building characteristics strongly influence carbon emissions, and any evaluation of local authority performance must take them into account. The mixed-effects model offers a fairer framework for comparison, although the residual diagnostics suggest that the model could be improved by adding non-linear terms, using transformations, or including additional predictors such as property type, insulation levels or heating fuel. These findings not only help explain the structural factors behind emissions but also provide a foundation for energy policy analysis at both local and national levels.
 
 
 ## Record of AI use for MTHM503 Regression coursework
-
-Instructions: You can use this document to record when, how and why you used GenAI to complete your assessment. It will help you create a record of AI use to submit alongside your references for AI-integrated and AI-assisted assignments. It may also be useful to help you discuss your AI use if you are required to do so in an academic conduct meeting.
-
 | **Date**       | **AI tool used** | **Purpose**                                | **Prompt**                                 | **Hyperlink to output (where possible)** | **Section of work used for** |
 |----------------|------------------|--------------------------------------------|--------------------------------------------|------------------------------------------|-------------------------------|
 | E.g. 15/07/2025| MS Copilot       | To help create an organised essay structure| ‘Generate ideas for structuring an essay on...’ | [insert link]                          | introduction                  |

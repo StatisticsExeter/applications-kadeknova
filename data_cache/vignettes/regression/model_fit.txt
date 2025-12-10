@@ -1,0 +1,16 @@
+          Mixed Linear Model Regression Results
+=========================================================
+Model:            MixedLM Dependent Variable: shortfall  
+No. Observations: 6917    Method:             REML       
+No. Groups:       346     Scale:              3.5884     
+Min. group size:  17      Log-Likelihood:     -14453.0511
+Max. group size:  20      Converged:          Yes        
+Mean group size:  20.0                                   
+---------------------------------------------------------
+              Coef.  Std.Err.    z    P>|z| [0.025 0.975]
+---------------------------------------------------------
+Intercept      2.409    0.065  37.206 0.000  2.282  2.536
+age[T.Recent] -2.981    0.046 -65.447 0.000 -3.071 -2.892
+n_rooms        1.054    0.008 132.940 0.000  1.039  1.070
+Group Var      0.434    0.025                            
+=========================================================

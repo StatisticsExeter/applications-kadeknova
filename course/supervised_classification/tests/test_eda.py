@@ -52,13 +52,18 @@ def test_grouped_stats(sample_df):
     print(stats.index)
     assert 'Owned' in stats.columns
     assert 'energy_score_count' in stats.index
-    
-    
+
+
 def test_plot_histograms_combined_runs():
     fig = plot_histograms_combined()
     assert isinstance(fig, go.Figure)
 
     base_dir = find_project_root()
-    outpath = Path(base_dir, "data_cache/vignettes/supervised_classification/histograms_combined.html")
-
+    outpath = Path(
+        base_dir,
+        "data_cache",
+        "vignettes",
+        "supervised_classification",
+        "histograms_combined.html"
+    )
     assert outpath.exists()

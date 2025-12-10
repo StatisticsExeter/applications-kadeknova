@@ -5,7 +5,6 @@ import pandas as pd
 from pathlib import Path
 
 from course.unsupervised_classification.knumber import (
-    plot_dendrogram,
     kmeans_elbow,
     kmeans_silhouette,
     gmm_bic_aic
@@ -30,6 +29,8 @@ def small_test_df():
 # --------------------------------------------------------------------
 # Test 1: K-means WSS HTML creation
 # --------------------------------------------------------------------
+
+
 def test_kmeans_elbow_html():
 
     df = small_test_df()

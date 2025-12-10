@@ -1,7 +1,5 @@
 # course/unsupervised_classification/knumber.py
 
-import numpy as np
-import pandas as pd
 from pathlib import Path
 import plotly.graph_objects as go
 import plotly.express as px
@@ -9,7 +7,6 @@ import plotly.express as px
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
-from scipy.cluster.hierarchy import dendrogram, linkage
 
 
 # =========================================================
@@ -56,7 +53,6 @@ def kmeans_elbow(df, k_range=range(2, 11),
     return wss
 
 
-
 # =========================================================
 # 2. SILHOUETTE SCORES FOR K-MEANS
 # =========================================================
@@ -87,7 +83,6 @@ def kmeans_silhouette(df, k_range=range(2, 11),
     fig.write_html(outpath)
 
     return sil_scores
-
 
 
 # =========================================================

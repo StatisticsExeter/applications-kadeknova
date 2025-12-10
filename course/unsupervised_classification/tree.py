@@ -1,5 +1,4 @@
 from scipy.cluster.hierarchy import linkage, fcluster
-from scipy.cluster.hierarchy import dendrogram as scipy_dendro
 import plotly.figure_factory as ff
 import plotly.express as px
 import pandas as pd
@@ -8,8 +7,6 @@ from sklearn.decomposition import PCA
 from pathlib import Path
 from course.utils import find_project_root
 from sklearn.mixture import GaussianMixture
-import plotly.graph_objects as go
-import numpy as np
 from course.unsupervised_classification.utils_cluster import summarize_clusters
 
 VIGNETTE_DIR = Path('data_cache') / 'vignettes' / 'unsupervised_classification'
@@ -47,7 +44,7 @@ def _fit_dendrogram(df):
     Return a scipy.cluster.hierarchy hierarchical clustering solution to these data"""
     Z = linkage(df, method='ward')  # menghitung linkage untuk dendrogram
     return Z
-  
+
 
 def _plot_dendrogram(Z):
     """Plot dendrogram using Plotly Figure Factory with correct linkage"""
@@ -93,6 +90,7 @@ def _scatter_clusters(df):
 
 # adding new clustering methods
 
+
 def _gmm_clusters(df_scaled, n_components=4):
     gmm = GaussianMixture(n_components=n_components, random_state=42)
     labels = gmm.fit_predict(df_scaled)
@@ -114,5 +112,3 @@ def gmm_analysis(n_components=4):
     fig = _scatter_clusters(df_pca)
     fig.write_html(outpath)
     summarize_clusters(df, clusters['cluster'], filename="gmm_summary.csv")
-    
-

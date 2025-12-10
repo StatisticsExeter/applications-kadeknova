@@ -1,7 +1,7 @@
 # course/unsupervised_classification/utils_cluster.py
 
-import pandas as pd
 from pathlib import Path
+
 
 def summarize_clusters(df, labels, filename="cluster_summary.csv"):
     outdir = Path("data_cache/vignettes/unsupervised_classification")

@@ -2,8 +2,10 @@ from pathlib import Path
 from doit.tools import config_changed
 from course.utils import load_pg_data
 from course.unsupervised_classification.eda import plot_scatter
-from course.unsupervised_classification.tree import (hierarchical_groups, hcluster_analysis,
-    gmm_analysis
+from course.unsupervised_classification.tree import (
+    hierarchical_groups,
+    hcluster_analysis,
+    gmm_analysis,
 )
 from course.unsupervised_classification.kmeans import kmeans
 from course.unsupervised_classification.knumber import (
@@ -11,7 +13,6 @@ from course.unsupervised_classification.knumber import (
     kmeans_silhouette,
     gmm_bic_aic
 )
-from course.utils import load_pg_data
 import pandas as pd
 
 

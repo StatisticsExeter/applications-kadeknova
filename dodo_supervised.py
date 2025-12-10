@@ -5,12 +5,10 @@ from course.supervised_classification.classify import fit_qda, fit_lda
 from course.supervised_classification.predict import pred_lda, pred_qda
 from course.supervised_classification.metrics import (
     metric_report_lda,
-    metric_report_qda,
-    confusion_matrix_lda,
-    confusion_matrix_qda
+    metric_report_qda
     )
 from course.supervised_classification.split_test_train import test_and_train
-from course.supervised_classification.eda import plot_scatter, get_summary_stats, plot_histograms_combined
+from course.supervised_classification.eda import plot_scatter, get_summary_stats
 from course.supervised_classification.roc_curve import plot_roc_curve
 
 
@@ -68,7 +66,10 @@ def task_tabulate_stats():
 
 def task_histograms_combined():
     return {
-        'actions': ['python -c "from course.supervised_classification.eda import plot_histograms_combined; plot_histograms_combined()"'],
+        'actions': [
+           'python -c "from course.supervised_classification.eda '
+           'import plot_histograms_combined; plot_histograms_combined()"'
+        ],
         'file_dep': ['data_cache/energy.csv', 'course/supervised_classification/eda.py'],
         'targets': ['data_cache/vignettes/supervised_classification/histograms_combined.html']
     }
@@ -151,7 +152,10 @@ def task_roc_curve():
 
 def task_confusion_matrix_lda():
     return {
-        'actions': ['python -c "from course.supervised_classification.metrics import confusion_matrix_lda; confusion_matrix_lda()"'],
+        'actions': [
+            'python -c "from course.supervised_classification.metrics '
+            'import confusion_matrix_lda; confusion_matrix_lda()"'
+        ],
         'file_dep': [
             'data_cache/models/lda_y_pred.csv',
             'data_cache/energy_y_test.csv',
@@ -163,7 +167,10 @@ def task_confusion_matrix_lda():
 
 def task_confusion_matrix_qda():
     return {
-        'actions': ['python -c "from course.supervised_classification.metrics import confusion_matrix_qda; confusion_matrix_qda()"'],
+        'actions': [
+            'python -c "from course.supervised_classification.metrics '
+            'import confusion_matrix_qda; confusion_matrix_qda()"'
+        ],
         'file_dep': [
             'data_cache/models/qda_y_pred.csv',
             'data_cache/energy_y_test.csv',
@@ -171,4 +178,3 @@ def task_confusion_matrix_qda():
         ],
         'targets': ['data_cache/vignettes/supervised_classification/confusion_matrix_qda.csv']
     }
-

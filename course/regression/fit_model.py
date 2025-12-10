@@ -49,8 +49,8 @@ def fit_model():
     _random_effects(results).to_csv(base_dir / 'data_cache' / 'models' / 'reffs.csv')
     _save_model_summary(results, outpath)
     _residual_diagnostics(results, df)
-    
-    
+
+
 def _residual_diagnostics(results, df):
     """Generate residual diagnostic plots and save them as HTML files."""
 
@@ -93,4 +93,3 @@ def _residual_diagnostics(results, df):
     fig_age = px.box(df, x='age', y='residuals',
                      title="Residuals by Age Category")
     fig_age.write_html(VIGNETTE_DIR / "residuals_vs_age.html")
-

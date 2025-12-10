@@ -26,7 +26,7 @@ def boxplot_rooms():
     df = pd.read_csv(base_dir / 'data_cache' / 'la_energy.csv')
     fig = _boxplot(df, 'n_rooms', 'shortfall', 'Shortfall by Number of rooms')
     fig.write_html(VIGNETTE_DIR / 'boxplot_rooms.html')
-    
+
 
 def shortfall_distribution():
     """Histogram of the distribution of shortfall (CO2 emissions)."""
@@ -54,11 +54,11 @@ def shortfall_by_authority():
     base_dir = find_project_root()
     df = pd.read_csv(base_dir / 'data_cache' / 'la_energy.csv')
 
-    fig = px.box(df, 
-                 x='local_authority_code', 
+    fig = px.box(df,
+                 x='local_authority_code',
                  y='shortfall',
                  title='Variation of Shortfall Across Local Authorities')
-    
+
     # Hide labels (too many authorities → unreadable)
     fig.update_xaxes(showticklabels=False)
 
@@ -76,10 +76,9 @@ def mean_shortfall_by_authority():
                  x='local_authority_code',
                  y='shortfall',
                  title='Mean Shortfall per Local Authority')
-    
+
     fig.update_xaxes(showticklabels=False)
     fig.write_html(VIGNETTE_DIR / 'mean_shortfall_by_authority.html')
-
 
 
 def mean_shortfall_age():

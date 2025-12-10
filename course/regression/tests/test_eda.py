@@ -1,7 +1,6 @@
 import pytest
 import pandas as pd
 from plotly.graph_objects import Figure
-from pathlib import Path
 from course.regression.eda import (
     _boxplot,
     boxplot_age,
@@ -11,7 +10,6 @@ from course.regression.eda import (
     shortfall_by_authority,
     mean_shortfall_by_authority,
     mean_shortfall_age,
-    VIGNETTE_DIR,
 )
 
 
@@ -73,7 +71,7 @@ def test_mean_shortfall_by_authority_creates_file(tmp_path, monkeypatch):
     monkeypatch.setattr("course.regression.eda.VIGNETTE_DIR", tmp_path)
     mean_shortfall_by_authority()
     assert (tmp_path / "mean_shortfall_by_authority.html").exists()
-    
+
 
 def test_mean_shortfall_age_creates_file(tmp_path, monkeypatch):
     monkeypatch.setattr("course.regression.eda.VIGNETTE_DIR", tmp_path)

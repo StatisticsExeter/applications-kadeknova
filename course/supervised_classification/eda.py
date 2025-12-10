@@ -3,9 +3,6 @@ import plotly.express as px
 from pathlib import Path
 from course.utils import find_project_root
 from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-
-
 
 
 VIGNETTE_DIR = Path('data_cache') / 'vignettes' / 'supervised_classification'
@@ -106,4 +103,3 @@ def plot_histograms_combined():
     fig.write_html(outpath)
 
     return fig
-
